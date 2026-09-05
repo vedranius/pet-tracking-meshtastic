@@ -14,6 +14,9 @@ class User(SQLModel, table=True):
     password_hash: str
     role: str = "user"  # "admin" | "user" — the first registered user becomes admin
     language: str = "hr"  # "hr" | "en" — used to render Telegram alert text server-side
+    bio: Optional[str] = None
+    avatar_path: Optional[str] = None  # relative path under <data>/uploads/avatars/
+    avatar_mime: Optional[str] = None
     created_at: datetime = Field(default_factory=utcnow)
 
 
@@ -154,3 +157,15 @@ class DeviceLocation(SQLModel, table=True):
     accuracy: Optional[float] = None
     battery: Optional[int] = None
     ts: datetime = Field(default_factory=utcnow, index=True)
+
+
+class PetPhoto(SQLModel, table=True):
+    """Photos of a pet (ideally from a few angles) — visible to every
+    signed-in user, not just the owner or admin, since the whole point is
+    helping someone recognize the animal if it's ever found by a stranger
+    or reported by a neighbor."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tracker_id: int = Field(foreign_key="tracker.id", index=True)
+    path: str  # relative path under <data>/uploads/pets/<tracker_id>/
+    mime_type: str
+    created_at: datetime = Field(default_factory=utcnow)

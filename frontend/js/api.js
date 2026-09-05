@@ -1,10 +1,12 @@
 import { t } from "./i18n.js";
 
-async function request(method, path, body) {
+async function request(method, path, body, rawBody) {
   const res = await fetch(path, {
     method,
-    headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    headers: rawBody ? undefined : (body !== undefined ? { "Content-Type": "application/json" } : undefined),
+    // FormData bodies must NOT get an explicit Content-Type — the browser
+    // sets one itself with the multipart boundary included.
+    body: rawBody ? rawBody : (body !== undefined ? JSON.stringify(body) : undefined),
   });
   if (res.status === 401) {
     const err = new Error("unauthenticated");
@@ -35,4 +37,5 @@ export const api = {
   post: (path, body) => request("POST", path, body ?? {}),
   put: (path, body) => request("PUT", path, body ?? {}),
   del: (path) => request("DELETE", path),
+  postFile: (path, formData) => request("POST", path, undefined, formData),
 };

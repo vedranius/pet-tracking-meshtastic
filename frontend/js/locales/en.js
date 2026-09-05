@@ -23,6 +23,8 @@ export default {
   "nav.cameras": "Cameras",
   "nav.admin": "Admin",
   "nav.settings": "Settings",
+  "nav.community": "Community",
+  "nav.community_short": "Pets",
   "nav.more": "More",
 
   // common
@@ -36,6 +38,7 @@ export default {
   "common.close": "Close",
   "common.copy": "Copy",
   "common.loading": "loading...",
+  "common.remove": "Remove",
   "common.error_status": "error ({status})",
 
   // backend error codes
@@ -154,6 +157,10 @@ export default {
   "devices.battery_alert_threshold": "Battery alert threshold (%)",
   "devices.offline_alert_minutes": "Offline alert after (min)",
   "devices.pet_saved": "Pet saved",
+  "devices.photos": "Photos",
+  "devices.add_photo": "Add photo",
+  "devices.no_photos": "No photos yet.",
+  "devices.photos_after_save": "You'll be able to add photos after the first save.",
   "devices.discover_failed": "couldn't fetch nodes (gateway offline?)",
 
   // channels
@@ -202,6 +209,11 @@ export default {
   // alerts
   "alerts.none": "No alerts recorded yet.",
 
+  // community
+  "community.hint": "Every pet on this server — photos help someone recognize your pet if it's ever found.",
+  "community.none": "No pets with photos added yet.",
+  "community.owner": "owner",
+
   // cameras
   "cameras.add": "Add camera",
   "cameras.hint": "Streaming only starts once you press play — connecting to the camera can take a few seconds.",
@@ -240,6 +252,12 @@ export default {
   "cameras.ptz_fetch_failed": "Couldn't fetch PTZ settings: {error}",
 
   // settings
+  "settings.profile": "Profile",
+  "settings.change_photo": "Change photo",
+  "settings.photo_saved": "Photo saved",
+  "settings.photo_removed": "Photo removed",
+  "settings.bio": "About me",
+  "settings.bio_placeholder": "Write something about yourself (visible to the admin)",
   "settings.telegram": "Telegram notifications",
   "settings.telegram_hint": "Alerts (geofence exits, low battery) also go to Telegram, whether or not this page is open.",
   "settings.bot_token": "Bot token",
@@ -270,4 +288,11 @@ export default {
   "admin.delete_user": "Delete user",
   "admin.confirm_delete_user": "Delete this user and all of their data (devices, pets, cameras, history)? This can't be undone.",
   "admin.user_deleted": "User deleted",
+  "admin.add_user": "Add user",
+  "admin.user_created": "User created",
+  "admin.promote": "Make admin",
+  "admin.demote": "Remove admin rights",
+  "admin.role_changed": "Role changed",
+  "admin.reset_password": "Reset password",
+  "admin.password_reset_done": "Password reset",
 };

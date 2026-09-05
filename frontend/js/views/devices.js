@@ -259,6 +259,13 @@ export async function mountDevices(container) {
           <span>${t("devices.active")}</span>
           <label class="switch"><input type="checkbox" name="active" ${!tr || tr.active ? "checked" : ""}><span class="slider"></span></label>
         </div>
+        ${tr ? `
+        <label>${t("devices.photos")}</label>
+        <div class="photo-grid" id="pet-photo-grid"></div>
+        <label class="btn btn-sm" style="margin:0 0 8px">${t("devices.add_photo")}
+          <input type="file" id="pet-photo-input" accept="image/*" hidden>
+        </label>
+        ` : `<p class="muted" style="font-size:12px">${t("devices.photos_after_save")}</p>`}
       `,
       onSubmit: async (fd) => {
         const payload = {
@@ -304,7 +311,54 @@ export async function mountDevices(container) {
         const opt = nodeSelect.selectedOptions[0];
         if (opt && opt.dataset.name && !nameInput.value) nameInput.value = opt.dataset.name;
       });
+    } else {
+      wirePetPhotos(tr, form);
     }
+  }
+
+  async function wirePetPhotos(tr, form) {
+    const grid = form.querySelector("#pet-photo-grid");
+    const input = form.querySelector("#pet-photo-input");
+
+    async function renderPhotos() {
+      let photos = [];
+      try {
+        photos = await api.get(`/api/trackers/${tr.id}/photos`);
+      } catch { /* ignore */ }
+      grid.innerHTML = photos.map((p) => `
+        <div class="photo-thumb" data-photo="${p.id}">
+          <img src="/api/trackers/${tr.id}/photos/${p.id}/file" alt="">
+          <button type="button" class="photo-del" data-del-photo="${p.id}">✕</button>
+        </div>
+      `).join("") || `<div class="muted" style="font-size:12px">${t("devices.no_photos")}</div>`;
+      grid.querySelectorAll("[data-del-photo]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          try {
+            await api.del(`/api/trackers/${tr.id}/photos/${btn.dataset.delPhoto}`);
+            await renderPhotos();
+          } catch (err) {
+            toast(err.message, "error");
+          }
+        });
+      });
+    }
+
+    input.addEventListener("change", async () => {
+      const file = input.files[0];
+      if (!file) return;
+      const fd = new FormData();
+      fd.append("file", file);
+      try {
+        await api.postFile(`/api/trackers/${tr.id}/photos`, fd);
+        await renderPhotos();
+      } catch (err) {
+        toast(err.message, "error");
+      } finally {
+        input.value = "";
+      }
+    });
+
+    await renderPhotos();
   }
 
   const unsub = subscribe(() => { renderGateways(); renderTrackers(); });

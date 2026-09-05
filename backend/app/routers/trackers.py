@@ -1,15 +1,17 @@
 import logging
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi.responses import FileResponse
 from sqlmodel import select
 
 from ..auth import require_login
 from ..db import get_session
-from ..models import Channel, Event, Gateway, Position, Telemetry, Tracker, User
+from ..models import Channel, Event, Gateway, PetPhoto, Position, Telemetry, Tracker, User
 from ..schemas import BuzzerConfigIn, PositionConfigIn, PowerConfigIn, RingIn, TrackerIn
 from ..services import mesh_admin
 from ..services.mesh_manager import mesh_manager
+from ..services.uploads import delete_image, full_path, save_image
 
 log = logging.getLogger("pawtrack.trackers")
 
@@ -177,3 +179,54 @@ def push_buzzer_config(tracker_id: int, payload: BuzzerConfigIn, user: User = De
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"push_failed: {e}")
     return {"ok": True}
+
+
+# -- photos -----------------------------------------------------------
+# Visible to every signed-in user, not just the owner/admin — the point of
+# a pet photo is helping someone recognize the animal if it's ever found
+# by a stranger, so it deliberately isn't scoped by ownership like
+# everything else in this router.
+
+@router.get("/{tracker_id}/photos")
+def list_pet_photos(tracker_id: int, _: User = Depends(require_login)):
+    with get_session() as session:
+        if not session.get(Tracker, tracker_id):
+            raise HTTPException(status_code=404, detail="not_found")
+        return session.exec(
+            select(PetPhoto).where(PetPhoto.tracker_id == tracker_id).order_by(PetPhoto.created_at)
+        ).all()
+
+
+@router.post("/{tracker_id}/photos")
+async def upload_pet_photo(tracker_id: int, file: UploadFile = File(...), user: User = Depends(require_login)):
+    with get_session() as session:
+        t = _own_tracker(session, tracker_id, user.id)
+        relative_path, mime_type = await save_image(file, f"pets/{t.id}")
+        photo = PetPhoto(tracker_id=t.id, path=relative_path, mime_type=mime_type)
+        session.add(photo)
+        session.commit()
+        session.refresh(photo)
+        return photo
+
+
+@router.delete("/{tracker_id}/photos/{photo_id}")
+def delete_pet_photo(tracker_id: int, photo_id: int, user: User = Depends(require_login)):
+    with get_session() as session:
+        _own_tracker(session, tracker_id, user.id)
+        photo = session.get(PetPhoto, photo_id)
+        if not photo or photo.tracker_id != tracker_id:
+            raise HTTPException(status_code=404, detail="not_found")
+        path = photo.path
+        session.delete(photo)
+        session.commit()
+    delete_image(path)
+    return {"ok": True}
+
+
+@router.get("/{tracker_id}/photos/{photo_id}/file")
+def get_pet_photo_file(tracker_id: int, photo_id: int, _: User = Depends(require_login)):
+    with get_session() as session:
+        photo = session.get(PetPhoto, photo_id)
+        if not photo or photo.tracker_id != tracker_id:
+            raise HTTPException(status_code=404, detail="not_found")
+        return FileResponse(full_path(photo.path), media_type=photo.mime_type)

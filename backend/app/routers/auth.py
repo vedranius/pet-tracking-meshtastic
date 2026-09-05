@@ -43,7 +43,10 @@ def me(request: Request):
             return {"authenticated": False}
         return {
             "authenticated": True,
+            "id": user.id,
             "username": user.username,
             "role": user.role,
             "language": user.language,
+            "bio": user.bio,
+            "has_avatar": bool(user.avatar_path),
         }

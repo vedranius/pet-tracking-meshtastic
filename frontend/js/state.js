@@ -23,6 +23,25 @@ export function currentUser() {
 
 export function setCurrentUser(user) {
   state.user = user;
+  renderCurrentUserBadge(user);
+}
+
+// Kept here (rather than in app.js) so any code that updates the account
+// (login, or a profile edit in Settings) can just call setCurrentUser again
+// and have the topbar reflect it, without an import cycle back into app.js.
+function renderCurrentUserBadge(user) {
+  const nameEl = document.getElementById("current-user-name");
+  const avatarEl = document.getElementById("current-user-avatar");
+  if (!nameEl || !avatarEl) return;
+  if (!user) {
+    nameEl.textContent = "";
+    avatarEl.innerHTML = "🧑";
+    return;
+  }
+  nameEl.textContent = user.username;
+  avatarEl.innerHTML = user.has_avatar
+    ? `<img src="/api/users/${user.id}/avatar?v=${Date.now()}" alt="">`
+    : "🧑";
 }
 
 export async function refreshGateways() {

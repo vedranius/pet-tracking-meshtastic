@@ -8,7 +8,21 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from .db import init_db
-from .routers import admin, auth, cameras, channels, device_location, events, gateways, geofences, settings, trackers, ws
+from .routers import (
+    admin,
+    auth,
+    cameras,
+    channels,
+    community,
+    device_location,
+    events,
+    gateways,
+    geofences,
+    profile,
+    settings,
+    trackers,
+    ws,
+)
 from .services import ptz
 from .services.mesh_manager import mesh_manager
 
@@ -78,6 +92,8 @@ app.include_router(settings.router)
 app.include_router(cameras.router)
 app.include_router(device_location.router)
 app.include_router(admin.router)
+app.include_router(profile.router)
+app.include_router(community.router)
 app.include_router(ws.router)
 
 if os.path.isdir(FRONTEND_DIR):

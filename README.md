@@ -19,7 +19,8 @@ It grew from a single-pet, single-user script into a generic, multi-tenant, mult
 - **"Ring" / find-my-pet** — send a command that makes a T1000-E-class tracker beep loudly, for physical search and recovery.
 - **Multiple gateways, channels, and pets** — not tied to one node or one animal; add as many of each as your mesh has.
 - **Camera viewer with PTZ** — add any RTSP camera by URL, watch it over HLS in the browser, and pan/tilt/zoom + save preset positions for ONVIF-capable PTZ cameras.
-- **Multi-user with an admin role** — every user manages their own gateways/pets/cameras in isolation; the first account created becomes an admin, who can additionally see every user's last known phone location *and* the distance from their own pets to their people — useful if you're the person other household members' pet-location-sharing "checks in" with.
+- **Multi-user with an admin role** — every user manages their own gateways/pets/cameras in isolation; the first account created becomes an admin, who can additionally see every user's last known phone location *and* the distance from their own pets to their people, create/promote/demote/delete accounts and reset passwords — useful if you're the person other household members' pet-location-sharing "checks in" with.
+- **Profiles and pet photos** — everyone can set a profile photo and a short bio (visible to the admin), and add one or more photos per pet from a few angles. Pet photos are visible to *every* signed-in user (not just the owner or admin) via the **Community** view — a read-only directory of every pet on the server, deliberately without live location data, meant purely to help someone recognize a pet if it's ever found by a stranger.
 - **Bilingual UI** — Croatian and English, switchable anytime, with the setting remembered per browser.
 - **Self-hosted** — SQLite, no cloud dependency, one `install.sh` away from running on your own Debian/Ubuntu server.
 

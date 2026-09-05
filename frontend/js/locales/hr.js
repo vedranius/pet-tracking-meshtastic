@@ -23,6 +23,8 @@ export default {
   "nav.cameras": "Kamere",
   "nav.admin": "Admin",
   "nav.settings": "Postavke",
+  "nav.community": "Zajednica",
+  "nav.community_short": "Ljubimci",
   "nav.more": "Više",
 
   // common
@@ -36,6 +38,7 @@ export default {
   "common.close": "Zatvori",
   "common.copy": "Kopiraj",
   "common.loading": "učitavanje...",
+  "common.remove": "Ukloni",
   "common.error_status": "greška ({status})",
 
   // backend error codes
@@ -154,6 +157,10 @@ export default {
   "devices.battery_alert_threshold": "Prag baterije za alert (%)",
   "devices.offline_alert_minutes": "Alert nakon tišine (min)",
   "devices.pet_saved": "Ljubimac spremljen",
+  "devices.photos": "Fotografije",
+  "devices.add_photo": "Dodaj fotografiju",
+  "devices.no_photos": "Još nema fotografija.",
+  "devices.photos_after_save": "Fotografije ćeš moći dodati nakon prvog spremanja.",
   "devices.discover_failed": "nije moguće dohvatiti (gateway offline?)",
 
   // channels
@@ -202,6 +209,11 @@ export default {
   // alerts
   "alerts.none": "Još nema zabilježenih obavijesti.",
 
+  // community
+  "community.hint": "Svi ljubimci na ovom serveru — fotografije pomažu prepoznati ljubimca ako ga netko pronađe.",
+  "community.none": "Još nema dodanih ljubimaca s fotografijama.",
+  "community.owner": "vlasnik",
+
   // cameras
   "cameras.add": "Dodaj kameru",
   "cameras.hint": "Prijenos kreće tek kad ga pokreneš — spajanje na kameru može potrajati par sekundi.",
@@ -240,6 +252,12 @@ export default {
   "cameras.ptz_fetch_failed": "PTZ postavke nije moguće dohvatiti: {error}",
 
   // settings
+  "settings.profile": "Profil",
+  "settings.change_photo": "Promijeni fotografiju",
+  "settings.photo_saved": "Fotografija spremljena",
+  "settings.photo_removed": "Fotografija uklonjena",
+  "settings.bio": "O meni",
+  "settings.bio_placeholder": "Napiši nešto o sebi (vidljivo adminu)",
   "settings.telegram": "Telegram obavijesti",
   "settings.telegram_hint": "Obavijesti (izlazak iz geofencea, niska baterija) idu i na Telegram, neovisno o tome je li ova stranica otvorena.",
   "settings.bot_token": "Bot token",
@@ -270,4 +288,11 @@ export default {
   "admin.delete_user": "Obriši korisnika",
   "admin.confirm_delete_user": "Obrisati ovog korisnika i sve njegove podatke (uređaje, ljubimce, kamere, povijest)? Ovo je nepovratno.",
   "admin.user_deleted": "Korisnik obrisan",
+  "admin.add_user": "Dodaj korisnika",
+  "admin.user_created": "Korisnik dodan",
+  "admin.promote": "Postavi za admina",
+  "admin.demote": "Ukloni admin ovlasti",
+  "admin.role_changed": "Uloga promijenjena",
+  "admin.reset_password": "Resetiraj lozinku",
+  "admin.password_reset_done": "Lozinka resetirana",
 };

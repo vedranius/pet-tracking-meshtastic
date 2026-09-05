@@ -13,6 +13,7 @@ import { mountAlerts } from "./views/alerts.js";
 import { mountCameras } from "./views/cameras.js";
 import { mountSettings } from "./views/settings.js";
 import { mountAdmin } from "./views/admin.js";
+import { mountCommunity } from "./views/community.js";
 
 const views = {
   dashboard: mountDashboard,
@@ -21,6 +22,7 @@ const views = {
   geofences: mountGeofences,
   alerts: mountAlerts,
   cameras: mountCameras,
+  community: mountCommunity,
   settings: mountSettings,
   admin: mountAdmin,
 };
@@ -44,7 +46,7 @@ async function showView(name) {
 }
 
 function wireNav() {
-  document.querySelectorAll(".nav-item[data-view]").forEach((btn) => {
+  document.querySelectorAll(".nav-item[data-view], #current-user-btn[data-view]").forEach((btn) => {
     btn.addEventListener("click", () => showView(btn.dataset.view));
   });
 }
