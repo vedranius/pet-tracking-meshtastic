@@ -29,7 +29,10 @@ export async function mountAdmin(container) {
     <div class="page">
       <div class="page-header">
         <h2>🛡️ ${t("admin.title")}</h2>
-        <button class="btn btn-primary btn-sm" id="add-user">+ ${t("admin.add_user")}</button>
+        <div class="card-row">
+          <button class="btn btn-sm" id="copy-settings">📋 ${t("admin.copy_settings")}</button>
+          <button class="btn btn-primary btn-sm" id="add-user">+ ${t("admin.add_user")}</button>
+        </div>
       </div>
       <p class="muted" style="font-size:13px;margin-top:-8px">${t("admin.hint")}</p>
       <div id="admin-map" style="height:340px;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px"></div>
@@ -38,6 +41,7 @@ export async function mountAdmin(container) {
   `;
 
   container.querySelector("#add-user").addEventListener("click", () => openAddUserModal());
+  container.querySelector("#copy-settings").addEventListener("click", () => openCopySettingsModal());
 
   const map = L.map("admin-map").setView(DEFAULT_CENTER, 7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -252,6 +256,44 @@ export async function mountAdmin(container) {
           await api.put(`/api/admin/users/${created.id}/role`, { role: "admin" });
         }
         toast(t("admin.user_created"), "success");
+        await load();
+      },
+    });
+  }
+
+  function openCopySettingsModal() {
+    const userOptions = overview.users.map((row) =>
+      `<option value="${row.user.id}">${escapeHtml(row.user.username)}</option>`
+    ).join("");
+
+    openModal({
+      title: t("admin.copy_settings"),
+      submitLabel: t("admin.copy"),
+      bodyHtml: `
+        <p class="muted" style="font-size:13px;margin-top:-6px">${t("admin.copy_settings_hint")}</p>
+        <label>${t("admin.copy_from")} <select name="from_user_id" required>${userOptions}</select></label>
+        <label>${t("admin.copy_to")} <select name="to_user_id" required>${userOptions}</select></label>
+        <div class="checklist">
+          <label><input type="checkbox" name="include_gateways" checked> 📡 ${t("admin.gateways")} (${t("admin.copy_gateways_note")})</label>
+          <label><input type="checkbox" name="include_channels" checked> 🔑 ${t("nav.channels")}</label>
+          <label><input type="checkbox" name="include_pets" checked> 🐾 ${t("admin.pets")} + ${t("nav.geofences")}</label>
+          <label><input type="checkbox" name="include_cameras" checked> 📹 ${t("admin.cameras")}</label>
+        </div>
+      `,
+      onSubmit: async (fd) => {
+        const fromId = Number(fd.get("from_user_id"));
+        const toId = Number(fd.get("to_user_id"));
+        if (fromId === toId) { toast(t("admin.copy_same_user"), "error"); return false; }
+        const res = await api.post("/api/admin/copy-settings", {
+          from_user_id: fromId,
+          to_user_id: toId,
+          include_gateways: fd.get("include_gateways") === "on",
+          include_channels: fd.get("include_channels") === "on",
+          include_pets: fd.get("include_pets") === "on",
+          include_cameras: fd.get("include_cameras") === "on",
+        });
+        const c = res.copied;
+        toast(t("admin.copy_done", { gateways: c.gateways, channels: c.channels, pets: c.pets, geofences: c.geofences, cameras: c.cameras }), "success");
         await load();
       },
     });

@@ -20,6 +20,7 @@ from ..models import (
     User,
 )
 from ..schemas import RegisterIn
+from ..services import mediamtx_admin
 from ..services.geo import haversine_m
 from ..services.timerange import resolve_range
 from ..services.uploads import delete_image
@@ -37,6 +38,15 @@ class PasswordResetIn(BaseModel):
 
 class LocationSharingIn(BaseModel):
     enabled: bool
+
+
+class CopySettingsIn(BaseModel):
+    from_user_id: int
+    to_user_id: int
+    include_gateways: bool = True
+    include_channels: bool = True
+    include_pets: bool = True
+    include_cameras: bool = True
 
 
 @router.get("/users")
@@ -257,3 +267,90 @@ def admin_device_locations(
         if until:
             stmt = stmt.where(DeviceLocation.ts < until)
         return session.exec(stmt.order_by(DeviceLocation.ts)).all()
+
+
+# -- copy settings between accounts ----------------------------------------
+# For households where several family members each want their own login
+# (so the admin can see everyone's individual location) but share the same
+# gateway nodes, pets, and cameras — saves re-entering IPs/PSKs/RTSP URLs by
+# hand for every account. Deliberately *copies*, not shares: each account
+# ends up with its own independent rows, no live data is duplicated, and a
+# copied gateway is always disabled by default (Meshtastic's WiFi TCP API
+# only accepts one connected client per node — enabling both the original
+# and the copy at the same time reproduces the exact connection-contention
+# bug this project already hit once).
+
+@router.post("/copy-settings")
+async def copy_settings(payload: CopySettingsIn):
+    if payload.from_user_id == payload.to_user_id:
+        raise HTTPException(status_code=400, detail="same_user")
+
+    counts = {"gateways": 0, "channels": 0, "pets": 0, "geofences": 0, "cameras": 0}
+    new_camera_ids: list[tuple[int, str]] = []
+
+    with get_session() as session:
+        from_user = session.get(User, payload.from_user_id)
+        to_user = session.get(User, payload.to_user_id)
+        if not from_user or not to_user:
+            raise HTTPException(status_code=404, detail="not_found")
+
+        channel_map: dict[int, int] = {}
+        if payload.include_channels:
+            for ch in session.exec(select(Channel).where(Channel.owner_id == from_user.id)).all():
+                new_ch = Channel(
+                    owner_id=to_user.id, name=ch.name, device_index=ch.device_index,
+                    psk_base64=ch.psk_base64, position_precision=ch.position_precision,
+                    is_primary=ch.is_primary, notes=ch.notes,
+                )
+                session.add(new_ch)
+                session.flush()  # assigns new_ch.id without committing, so trackers below can reference it
+                channel_map[ch.id] = new_ch.id
+                counts["channels"] += 1
+
+        if payload.include_gateways:
+            for gw in session.exec(select(Gateway).where(Gateway.owner_id == from_user.id)).all():
+                session.add(Gateway(
+                    owner_id=to_user.id, name=gw.name, ip_address=gw.ip_address,
+                    enabled=False,  # never auto-enable — see module docstring above
+                    is_admin_capable=gw.is_admin_capable,
+                ))
+                counts["gateways"] += 1
+
+        if payload.include_pets:
+            for tr in session.exec(select(Tracker).where(Tracker.owner_id == from_user.id)).all():
+                new_tr = Tracker(
+                    owner_id=to_user.id, node_id=tr.node_id, name=tr.name, species=tr.species,
+                    long_name=tr.long_name, hw_model=tr.hw_model, color=tr.color, icon=tr.icon,
+                    channel_id=channel_map.get(tr.channel_id) if tr.channel_id else None,
+                    active=tr.active, battery_alert_threshold=tr.battery_alert_threshold,
+                    offline_alert_minutes=tr.offline_alert_minutes,
+                )
+                session.add(new_tr)
+                session.flush()
+                counts["pets"] += 1
+                for g in session.exec(select(Geofence).where(Geofence.tracker_id == tr.id)).all():
+                    session.add(Geofence(
+                        owner_id=to_user.id, tracker_id=new_tr.id, name=g.name, shape=g.shape,
+                        geometry_json=g.geometry_json, enabled=g.enabled,
+                    ))
+                    counts["geofences"] += 1
+
+        if payload.include_cameras:
+            for cam in session.exec(select(Camera).where(Camera.owner_id == from_user.id)).all():
+                new_cam = Camera(
+                    owner_id=to_user.id, name=cam.name, rtsp_url=cam.rtsp_url, is_ptz=cam.is_ptz,
+                    ptz_host=cam.ptz_host, ptz_user=cam.ptz_user, ptz_password=cam.ptz_password,
+                )
+                session.add(new_cam)
+                session.flush()
+                new_camera_ids.append((new_cam.id, new_cam.rtsp_url))
+                counts["cameras"] += 1
+
+        session.commit()
+
+    # Cameras (unlike gateways) support multiple simultaneous RTSP viewers,
+    # so it's safe to wire the copy's mediamtx path up immediately.
+    for cam_id, rtsp_url in new_camera_ids:
+        await mediamtx_admin.sync_path(cam_id, rtsp_url)
+
+    return {"ok": True, "copied": counts}

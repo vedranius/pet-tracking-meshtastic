@@ -319,4 +319,12 @@ export default {
   "admin.location_sharing": "Location sharing",
   "admin.location_sharing_on": "Location sharing turned on",
   "admin.location_sharing_off": "Location sharing turned off",
+  "admin.copy_settings": "Copy settings",
+  "admin.copy": "Copy",
+  "admin.copy_settings_hint": "For households sharing the same gateway nodes, pets, and cameras, but where everyone wants their own account. This copies, it doesn't share live data — each user ends up with their own independent rows.",
+  "admin.copy_from": "Copy from",
+  "admin.copy_to": "Copy to",
+  "admin.copy_gateways_note": "the copy stays disabled",
+  "admin.copy_same_user": "Pick two different users",
+  "admin.copy_done": "Copied: {gateways} gateway(s), {channels} channel(s), {pets} pet(s), {geofences} geofence(s), {cameras} camera(s)",
 };

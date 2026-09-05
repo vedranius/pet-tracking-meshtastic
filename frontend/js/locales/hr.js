@@ -319,4 +319,12 @@ export default {
   "admin.location_sharing": "Dijeljenje lokacije",
   "admin.location_sharing_on": "Dijeljenje lokacije uključeno",
   "admin.location_sharing_off": "Dijeljenje lokacije isključeno",
+  "admin.copy_settings": "Kopiraj postavke",
+  "admin.copy": "Kopiraj",
+  "admin.copy_settings_hint": "Za obitelji/kućanstva koja dijele iste gateway čvorove, ljubimce i kamere, ali svatko želi svoj račun. Kopija ne dijeli podatke uživo — svaki korisnik dobiva vlastite, neovisne retke.",
+  "admin.copy_from": "Kopiraj od",
+  "admin.copy_to": "Kopiraj na",
+  "admin.copy_gateways_note": "kopija ostaje isključena",
+  "admin.copy_same_user": "Odaberi dva različita korisnika",
+  "admin.copy_done": "Kopirano: {gateways} gateway(a), {channels} kanal(a), {pets} ljubimac(aca), {geofences} geofence(a), {cameras} kamera(a)",
 };

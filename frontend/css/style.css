@@ -186,8 +186,13 @@ h1, h2, h3 { margin: 0 0 8px; }
 .list-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 
 .modal-backdrop {
+  /* Above Leaflet's own internal panes (tile/marker/popup panes reach
+     z-index ~700) — otherwise a modal opened over any page with a map
+     (Admin, Geofences, Dashboard) gets painted over by the map wherever
+     the two overlap on screen, instead of the other way around. Same root
+     cause as the tracker-panel/timeline-panel-bar z-index fixes above. */
   position: fixed; inset: 0; background: rgba(10, 16, 12, .45); display: flex; align-items: flex-end;
-  justify-content: center; z-index: 100; padding: 0;
+  justify-content: center; z-index: 1500; padding: 0;
 }
 .modal {
   background: var(--surface); width: 100%; max-width: 480px; border-radius: 18px 18px 0 0; padding: 20px;
