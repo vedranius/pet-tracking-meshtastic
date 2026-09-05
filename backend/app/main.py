@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .db import init_db
@@ -68,7 +69,26 @@ async def lifespan(app: FastAPI):
     await ptz.close_all()
 
 
+class NoCacheStaticMiddleware(BaseHTTPMiddleware):
+    """CDNs/reverse proxies in front of a self-hosted deploy (Cloudflare in
+    particular) cache recognized static extensions (.js/.css/...) at the
+    edge for hours by default — entirely server-side, so a browser's own
+    cache (even a fresh incognito one) has no bearing on it at all. We never
+    send a Cache-Control header ourselves, which is exactly the condition
+    that lets a CDN apply its own default heuristic instead of asking us.
+    Force revalidation on every request for anything that isn't the API so
+    a real content change (i.e. every deploy) is never stuck behind a
+    multi-hour edge cache."""
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if not request.url.path.startswith(("/api", "/ws")):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 app = FastAPI(title="PawTrack", lifespan=lifespan)
+app.add_middleware(NoCacheStaticMiddleware)
 # A non-default cookie name matters here: browsers scope cookies by domain
 # and path only, not by port, so a second app on the same host (e.g. an
 # existing deployment on a different port) using Starlette's default

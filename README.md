@@ -84,7 +84,9 @@ Re-running `sudo ./install.sh` on an existing install pulls in code changes and 
 
 ### Reverse-proxying it yourself
 
-If you skip the nginx step (e.g. you're using Cloudflare Tunnel with Zero Trust / Access for authentication in front of this), see `deploy/nginx-pawtrack.conf` for the two things any proxy in front of PawTrack needs: forwarding `/ws` with WebSocket upgrade headers, and (if you're behind a caching CDN) disabling caching so frontend updates aren't served stale.
+If you skip the nginx step (e.g. you're using Cloudflare Tunnel with Zero Trust / Access for authentication in front of this), see `deploy/nginx-pawtrack.conf` for the WebSocket upgrade headers `/ws` needs from any proxy in front of PawTrack.
+
+**If you're behind Cloudflare specifically:** its default behavior caches recognized static file extensions (`.js`, `.css`, ...) at the edge for hours, on its own, even with no `Cache-Control` header from the origin — so a redeploy can look like it silently didn't take effect (an incognito window won't help either, since this cache lives on Cloudflare's servers, not the visitor's browser). PawTrack's backend already sends `Cache-Control: no-cache` on everything except `/api/*`/`/ws`, which stops Cloudflare from applying that default; if you still see stale content right after an update, purge the Cloudflare cache for the zone once.
 
 ### Running more than one instance on the same host
 
@@ -94,7 +96,7 @@ Each instance needs its own `uvicorn` port and, if cameras are enabled, its own 
 
 | Component | Version |
 |---|---|
-| PawTrack web app | `0.3.1` (pre-release) — shown in the app's own topbar and login screen |
+| PawTrack web app | `0.3.2` (pre-release) — shown in the app's own topbar and login screen |
 | PawTrack Android app | `0.1.1` (pre-release) — shown in the app's toolbar |
 
 Releases are published under [Releases](../../releases) once tagged.
