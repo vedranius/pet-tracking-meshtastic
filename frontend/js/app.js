@@ -180,6 +180,14 @@ document.getElementById("logout-btn").addEventListener("click", async () => {
 applyStaticDom();
 wireLangSwitches();
 
+// Shown on the login screen (no auth needed to check it) and in the app's
+// topbar, precisely so "am I actually looking at the latest deploy?" has a
+// one-glance answer instead of guessing from behavior.
+api.get("/api/version").then((v) => {
+  document.getElementById("app-version-login").textContent = `v${v.version}`;
+  document.getElementById("app-version-app").textContent = `v${v.version}`;
+}).catch(() => {});
+
 (async function init() {
   const epoch = authEpoch;
   try {

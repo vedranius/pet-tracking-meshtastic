@@ -23,6 +23,8 @@ It grew from a single-pet, single-user script into a generic, multi-tenant, mult
 - **Profiles and pet photos** — everyone can set a profile photo and a short bio (visible to the admin), and add one or more photos per pet from a few angles. Pet photos are visible to *every* signed-in user (not just the owner or admin) via the **Community** view — a read-only directory of every pet on the server, deliberately without live location data, meant purely to help someone recognize a pet if it's ever found by a stranger.
 - **Bilingual UI** — Croatian and English, switchable anytime, with the setting remembered per browser.
 - **Self-hosted** — SQLite, no cloud dependency, one `install.sh` away from running on your own Debian/Ubuntu server.
+- **Version always visible** — the running version is printed on the login screen and in the topbar (web) or the toolbar (Android), so it's a one-glance check whether a redeploy/update actually took effect rather than guessing from behavior.
+- **Responsive down to a split-screen window** — the sidebar survives being squeezed to roughly half of a normal laptop/desktop screen (≥600px); only true phone widths fall back to the bottom nav bar.
 
 ## Architecture
 
@@ -92,8 +94,8 @@ Each instance needs its own `uvicorn` port and, if cameras are enabled, its own 
 
 | Component | Version |
 |---|---|
-| PawTrack web app | `0.3.0` (pre-release) |
-| PawTrack Android app | `0.1.0` (pre-release) |
+| PawTrack web app | `0.3.1` (pre-release) — shown in the app's own topbar and login screen |
+| PawTrack Android app | `0.1.1` (pre-release) — shown in the app's toolbar |
 
 Releases are published under [Releases](../../releases) once tagged.
 

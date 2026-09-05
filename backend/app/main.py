@@ -25,6 +25,7 @@ from .routers import (
 )
 from .services import ptz
 from .services.mesh_manager import mesh_manager
+from .version import APP_VERSION
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -81,6 +82,14 @@ app.add_middleware(
     same_site="lax",
     max_age=60 * 60 * 24 * 30,
 )
+
+@app.get("/api/version")
+def get_version():
+    # Deliberately unauthenticated — the whole point is being able to check
+    # this (e.g. against the page's own cached copy) without needing to log
+    # in first, to tell whether you're actually looking at the latest deploy.
+    return {"version": APP_VERSION}
+
 
 app.include_router(auth.router)
 app.include_router(gateways.router)

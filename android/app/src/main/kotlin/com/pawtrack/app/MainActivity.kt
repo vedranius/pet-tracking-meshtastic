@@ -45,6 +45,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+        // So it's a one-glance check whether a sideloaded APK update
+        // actually installed, same reasoning as the web app's version badge.
+        supportActionBar?.subtitle = "v${BuildConfig.VERSION_NAME}"
 
         val url = prefs.serverUrl
         if (url.isNullOrBlank()) {

@@ -20,7 +20,7 @@
 
   <form id="login-form" class="login-card">
     <div class="login-logo">🐾</div>
-    <h1>PawTrack</h1>
+    <h1>PawTrack <span class="app-version" id="app-version-login"></span></h1>
     <p class="muted" data-i18n="login.subtitle">Sign in to access your network</p>
     <label><span data-i18n="login.username">Username</span>
       <input type="text" name="username" autocomplete="username" required>
@@ -51,7 +51,7 @@
 
 <div id="app" class="app" hidden>
   <header class="topbar">
-    <div class="topbar-brand">🐾 <span>PawTrack</span></div>
+    <div class="topbar-brand">🐾 <span>PawTrack</span> <span class="app-version" id="app-version-app"></span></div>
     <div class="topbar-right">
       <div class="lang-switch" id="lang-switch-app">
         <button type="button" data-lang="hr">HR</button>

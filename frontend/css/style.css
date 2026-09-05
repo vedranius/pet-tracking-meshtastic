@@ -115,6 +115,8 @@ h1, h2, h3 { margin: 0 0 8px; }
   z-index: 20;
 }
 .topbar-brand { font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.app-version { font-weight: 600; font-size: 11px; color: var(--text-muted); }
+.login-card h1 .app-version { display: block; font-size: 12px; margin-top: 2px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .ws-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); display: inline-block; transition: background .2s; }
 .ws-dot.on { background: var(--success); }
@@ -141,7 +143,12 @@ h1, h2, h3 { margin: 0 0 8px; }
 .nav-item .icon { font-size: 19px; }
 .nav-item.active { color: var(--primary); }
 
-@media (min-width: 860px) {
+/* 600px, not the more common ~860px "tablet" breakpoint: half of almost any
+   laptop/desktop screen split side-by-side with another window still clears
+   this (e.g. 1366px wide -> 683px per side), so the sidebar survives a
+   split-screen desktop window and only true phone widths fall back to the
+   bottom nav bar. */
+@media (min-width: 600px) {
   .app {
     grid-template-columns: 220px 1fr;
     grid-template-rows: var(--topbar-h) 1fr;
@@ -201,7 +208,7 @@ h1, h2, h3 { margin: 0 0 8px; }
   box-shadow: var(--shadow); border-radius: var(--radius);
   left: 10px; right: 10px; bottom: 10px; max-height: 42vh; overflow-y: auto; padding: 8px;
 }
-@media (min-width: 860px) {
+@media (min-width: 600px) {
   .tracker-panel { left: 14px; right: auto; top: 14px; bottom: 14px; width: 300px; max-height: none; }
 }
 .tracker-chip {
