@@ -92,14 +92,15 @@ Each instance needs its own `uvicorn` port and, if cameras are enabled, its own 
 | Component | Version |
 |---|---|
 | PawTrack web app | `0.1.0` (pre-release) |
-| PawTrack Android app | not yet released |
+| PawTrack Android app | `0.1.0` (pre-release) |
 
 Releases are published under [Releases](../../releases) once tagged.
 
 ## Roadmap
 
-- [ ] Android companion app (installable APK under Releases): point it at your PawTrack URL (including a Cloudflare Zero Trust / Access-protected domain), sign in, see the same live map, and — the point of it — share your own phone's location in the background so the admin dashboard has both halves of the "how far is my pet from me" picture. Push notifications instead of/alongside Telegram.
-- [ ] Tagged `v1.0.0` release of both the web app and the Android app.
+- [x] Android companion app (installable APK under [Releases](../../releases)): point it at your PawTrack URL (including a Cloudflare Zero Trust / Access-protected domain), sign in, see the same live dashboard, and share your own phone's location in the background so the admin dashboard has both halves of the "how far is my pet from me" picture, plus notifications without needing Telegram or a Google account. See [android/README.md](android/README.md) for how it's built.
+- [ ] Real-device testing of the Android app (built and verified in CI so far; hasn't yet been run against actual hardware/a live deployment).
+- [ ] Tagged `v1.0.0` release of both the web app and the Android app, once the above is done.
 
 ## Contributing / issues
 
