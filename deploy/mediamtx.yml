@@ -1,0 +1,32 @@
+logLevel: info
+
+# We only need HLS output, served locally — the backend proxies it through
+# an authenticated route (see backend/app/routers/cameras.py), so nothing
+# here needs to be reachable from outside this server.
+rtsp: no
+rtmp: no
+webrtc: no
+srt: no
+moq: no
+
+hls: yes
+hlsAddress: 127.0.0.1:8888
+hlsAllowOrigins: ["*"]
+hlsAlwaysRemux: no
+# fmp4, not lowLatency: the backend's HLS proxy does plain buffered GETs and
+# doesn't forward query params or long-poll, which LL-HLS's blocking
+# playlist reloads need.
+hlsVariant: fmp4
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+
+# The control API lets the backend add/update/remove a camera's path the
+# moment you save it in the UI (see backend/app/services/mediamtx_admin.py)
+# — no manual editing of this file or restarts needed. Kept on localhost
+# only, same as the HLS output above.
+api: yes
+apiAddress: 127.0.0.1:9997
+
+# No "paths:" section here on purpose — every camera you add through the
+# PawTrack UI is pushed into mediamtx's running config via that API instead
+# of being listed statically in this file.

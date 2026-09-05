@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PawTrack</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#1f6b4d">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐾</text></svg>">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="vendor/leaflet-draw/leaflet.draw.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="login-screen" class="login-screen">
+  <div id="lang-switch-login" class="lang-switch lang-switch-floating">
+    <button type="button" data-lang="hr">HR</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+
+  <form id="login-form" class="login-card">
+    <div class="login-logo">🐾</div>
+    <h1>PawTrack</h1>
+    <p class="muted" data-i18n="login.subtitle">Sign in to access your network</p>
+    <label><span data-i18n="login.username">Username</span>
+      <input type="text" name="username" autocomplete="username" required>
+    </label>
+    <label><span data-i18n="login.password">Password</span>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <div id="login-error" class="error-text" hidden></div>
+    <button type="submit" class="btn btn-primary btn-block" data-i18n="login.submit">Sign in</button>
+    <button type="button" id="show-register" class="btn btn-ghost btn-block btn-sm" data-i18n="login.go_register">Don't have an account? Register</button>
+  </form>
+
+  <form id="register-form" class="login-card" hidden>
+    <div class="login-logo">🐾</div>
+    <h1>PawTrack</h1>
+    <p class="muted" data-i18n="register.subtitle">Create your account</p>
+    <label><span data-i18n="login.username">Username</span>
+      <input type="text" name="username" autocomplete="username" minlength="3" required>
+    </label>
+    <label><span data-i18n="login.password">Password</span>
+      <input type="password" name="password" autocomplete="new-password" minlength="6" required>
+    </label>
+    <div id="register-error" class="error-text" hidden></div>
+    <button type="submit" class="btn btn-primary btn-block" data-i18n="register.submit">Create account</button>
+    <button type="button" id="show-login" class="btn btn-ghost btn-block btn-sm" data-i18n="register.go_login">Already have an account? Sign in</button>
+  </form>
+</div>
+
+<div id="app" class="app" hidden>
+  <header class="topbar">
+    <div class="topbar-brand">🐾 <span>PawTrack</span></div>
+    <div class="topbar-right">
+      <div class="lang-switch" id="lang-switch-app">
+        <button type="button" data-lang="hr">HR</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+      <span id="ws-dot" class="ws-dot" data-i18n-title="topbar.live_connection" title="live connection"></span>
+      <button id="logout-btn" class="btn btn-ghost btn-sm" data-i18n="topbar.logout">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="sidenav">
+    <button class="nav-item active" data-view="dashboard"><span class="icon">🗺️</span><span data-i18n="nav.dashboard">Map</span></button>
+    <button class="nav-item" data-view="devices"><span class="icon">📡</span><span data-i18n="nav.devices">Devices</span></button>
+    <button class="nav-item" data-view="channels"><span class="icon">🔑</span><span data-i18n="nav.channels">Channels</span></button>
+    <button class="nav-item" data-view="geofences"><span class="icon">📐</span><span data-i18n="nav.geofences">Geofences</span></button>
+    <button class="nav-item" data-view="alerts"><span class="icon">🔔</span><span data-i18n="nav.alerts">Alerts</span></button>
+    <button class="nav-item" data-view="cameras"><span class="icon">📹</span><span data-i18n="nav.cameras">Cameras</span></button>
+    <button class="nav-item" data-view="admin" id="nav-admin" hidden><span class="icon">🛡️</span><span data-i18n="nav.admin">Admin</span></button>
+    <button class="nav-item" data-view="settings"><span class="icon">⚙️</span><span data-i18n="nav.settings">Settings</span></button>
+  </nav>
+
+  <main id="view-root" class="view-root"></main>
+
+  <nav class="bottomnav">
+    <button class="nav-item active" data-view="dashboard"><span class="icon">🗺️</span><span data-i18n="nav.dashboard">Map</span></button>
+    <button class="nav-item" data-view="devices"><span class="icon">📡</span><span data-i18n="nav.devices">Devices</span></button>
+    <button class="nav-item" data-view="geofences"><span class="icon">📐</span><span data-i18n="nav.geofences">Geofences</span></button>
+    <button class="nav-item" data-view="alerts"><span class="icon">🔔</span><span data-i18n="nav.alerts_short">Alerts</span></button>
+    <button class="nav-item" data-view="cameras"><span class="icon">📹</span><span data-i18n="nav.cameras">Cameras</span></button>
+    <button class="nav-item" data-view="settings"><span class="icon">⚙️</span><span data-i18n="nav.more">More</span></button>
+  </nav>
+</div>
+
+<div id="toast-root" class="toast-root"></div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/leaflet-draw/leaflet.draw.js"></script>
+<script src="vendor/hls.js/hls.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
