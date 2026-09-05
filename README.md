@@ -14,7 +14,7 @@ It grew from a single-pet, single-user script into a generic, multi-tenant, mult
 
 - **Live map** — every pet's current position, battery, and speed, updated in real time over a WebSocket, with a "my location" button to center on yourself instead of hunting around the map (requires HTTPS or localhost — a browser restriction, see the deployment notes below).
 - **Geofencing** — draw a circle or polygon per pet on the map; get an alert (web + Telegram) when they leave or come back, with consecutive-reading confirmation so GPS jitter near a fence edge doesn't cause false alarms.
-- **Movement timeline** — scrub back through a pet's position history (last hour to last 7 days) with a map trail and per-fix detail list.
+- **Movement timeline** — scrub back through a pet's position history (last hour up to 14 days, or one specific calendar day) with a connected path drawn on the map and a step-forward/back control; the per-fix detail list stays collapsed by default so it doesn't cover the map, expandable on demand.
 - **Remote radio config** — push channel/PSK, GPS interval, power-saving, and buzzer settings to a tracker over the mesh itself (Meshtastic's AdminMessage protocol) — no direct connection to the tracker needed.
 - **"Ring" / find-my-pet** — send a command that makes a T1000-E-class tracker beep loudly, for physical search and recovery.
 - **Multiple gateways, channels, and pets** — not tied to one node or one animal; add as many of each as your mesh has.
@@ -96,7 +96,7 @@ Each instance needs its own `uvicorn` port and, if cameras are enabled, its own 
 
 | Component | Version |
 |---|---|
-| PawTrack web app | `0.3.2` (pre-release) — shown in the app's own topbar and login screen |
+| PawTrack web app | `0.3.3` (pre-release) — shown in the app's own topbar and login screen |
 | PawTrack Android app | `0.1.1` (pre-release) — shown in the app's toolbar |
 
 Releases are published under [Releases](../../releases) once tagged.

@@ -7,10 +7,17 @@ import { t } from "./i18n.js";
  * `fetchPositions({hours} | {date})` returns — the caller decides which
  * API endpoint that hits (own tracker, admin-viewed tracker, or a user's
  * phone location history), this just handles the range/day picking and
- * rendering, which is otherwise identical in every case. */
+ * rendering, which is otherwise identical in every case.
+ *
+ * The per-fix list is collapsed by default (a native <details> element) —
+ * it used to be always open and, especially over a map as short as the
+ * admin dashboard's, could grow tall enough to cover the map it's supposed
+ * to be annotating. The controls strip above it stays compact so the path
+ * itself is visible immediately. */
 export function openTimelinePanel({ container, map, title, color = "#3363c9", fetchPositions, onCloseExtra }) {
   let layer = null;
   let ghost = null;
+  let currentPositions = [];
 
   const today = new Date();
   const maxDate = today.toISOString().slice(0, 10);
@@ -40,17 +47,25 @@ export function openTimelinePanel({ container, map, title, color = "#3363c9", fe
       <button class="btn btn-sm" id="tp-clear-date" hidden>${t("dashboard.back_to_range")}</button>
     </div>
     <div class="timeline-bar">
+      <button class="btn btn-sm" id="tp-prev" disabled title="${t("dashboard.step_prev")}">⏮</button>
       <input type="range" id="tp-slider" min="0" max="0" value="0" disabled>
+      <button class="btn btn-sm" id="tp-next" disabled title="${t("dashboard.step_next")}">⏭</button>
     </div>
     <div id="tp-label" class="muted" style="font-size:12px;text-align:center">${t("dashboard.no_data")}</div>
-    <div id="tp-history" class="position-history"></div>
+    <details id="tp-details">
+      <summary id="tp-summary">${t("dashboard.show_list")}</summary>
+      <div id="tp-history" class="position-history"></div>
+    </details>
   `;
 
   const rangeSelect = bar.querySelector("#tp-range");
   const dateInput = bar.querySelector("#tp-date");
   const clearDateBtn = bar.querySelector("#tp-clear-date");
   const slider = bar.querySelector("#tp-slider");
+  const prevBtn = bar.querySelector("#tp-prev");
+  const nextBtn = bar.querySelector("#tp-next");
   const label = bar.querySelector("#tp-label");
+  const summary = bar.querySelector("#tp-summary");
   const historyEl = bar.querySelector("#tp-history");
 
   function close() {
@@ -81,25 +96,38 @@ export function openTimelinePanel({ container, map, title, color = "#3363c9", fe
     try {
       positions = await fetchPositions(params);
     } catch { /* show as "no data" below rather than an uncaught error */ }
+    currentPositions = positions;
 
     if (layer) { map.removeLayer(layer); layer = null; }
     if (!positions.length) {
       slider.disabled = true;
       slider.max = 0;
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
       label.textContent = t("dashboard.no_data_range");
+      summary.textContent = t("dashboard.show_list");
       historyEl.innerHTML = "";
       return;
     }
 
     const latlngs = positions.map((p) => [p.lat, p.lon]);
     layer = L.layerGroup().addTo(map);
-    L.polyline(latlngs, { color, weight: 3, opacity: 0.7 }).addTo(layer);
+    // The connecting line plus a small dot at every fix (not just the
+    // scrubbed "ghost" position) makes the step-by-step path itself legible
+    // at a glance, before ever touching the slider.
+    L.polyline(latlngs, { color, weight: 3, opacity: 0.6 }).addTo(layer);
+    for (const ll of latlngs) {
+      L.circleMarker(ll, { radius: 3, color, fillColor: color, fillOpacity: 0.9, weight: 1 }).addTo(layer);
+    }
     ghost = L.circleMarker(latlngs[latlngs.length - 1], { radius: 8, color, fillColor: color, fillOpacity: 1 }).addTo(layer);
     map.fitBounds(latlngs, { maxZoom: 17, padding: [30, 30] });
 
     slider.disabled = false;
     slider.max = String(positions.length - 1);
     slider.value = String(positions.length - 1);
+    prevBtn.disabled = false;
+    nextBtn.disabled = false;
+    summary.textContent = t("dashboard.show_list_count", { n: positions.length });
     const fmt = (p) => parseApiDate(p.ts).toLocaleString();
     const updateLabel = (idx) => {
       const p = positions[idx];
@@ -130,6 +158,16 @@ export function openTimelinePanel({ container, map, title, color = "#3363c9", fe
     });
 
     slider.oninput = () => updateLabel(Number(slider.value));
+    prevBtn.onclick = () => {
+      const idx = Math.max(0, Number(slider.value) - 1);
+      slider.value = String(idx);
+      updateLabel(idx);
+    };
+    nextBtn.onclick = () => {
+      const idx = Math.min(currentPositions.length - 1, Number(slider.value) + 1);
+      slider.value = String(idx);
+      updateLabel(idx);
+    };
     updateLabel(positions.length - 1);
   }
 
