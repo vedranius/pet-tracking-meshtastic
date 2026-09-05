@@ -164,6 +164,10 @@ export async function mountAdmin(container) {
           </div>
         ` : `<div class="muted" style="font-size:13px">${t("admin.no_cameras")}</div>`}
 
+        <div class="switch-row" style="margin-top:10px">
+          <span>📍 ${t("admin.location_sharing")}</span>
+          <label class="switch"><input type="checkbox" data-location-sharing="${row.user.id}" ${row.user.location_sharing_enabled ? "checked" : ""}><span class="slider"></span></label>
+        </div>
         <div class="card-row" style="margin-top:10px">
           <button class="btn btn-sm" data-role="${row.user.id}" data-current-role="${row.user.role}">
             ${row.user.role === "admin" ? t("admin.demote") : t("admin.promote")}
@@ -176,6 +180,18 @@ export async function mountAdmin(container) {
 
     el.querySelectorAll("[data-watch-cam]").forEach((btn) => {
       btn.addEventListener("click", () => openWatchCameraModal(btn.dataset.watchCam, btn.dataset.camName));
+    });
+
+    el.querySelectorAll("[data-location-sharing]").forEach((input) => {
+      input.addEventListener("change", async () => {
+        try {
+          await api.put(`/api/admin/users/${input.dataset.locationSharing}/location-sharing`, { enabled: input.checked });
+          toast(input.checked ? t("admin.location_sharing_on") : t("admin.location_sharing_off"), "success");
+        } catch (err) {
+          input.checked = !input.checked;
+          toast(err.message, "error");
+        }
+      });
     });
 
     el.querySelectorAll("[data-timeline-pet]").forEach((btn) => {

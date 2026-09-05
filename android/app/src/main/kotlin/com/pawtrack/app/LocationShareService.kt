@@ -89,15 +89,16 @@ class LocationShareService : Service() {
 
     private fun startSharing() {
         if (running.getAndSet(true)) return
-        prefs.sharingEnabled = true
         startLocationUpdates()
         startHeartbeat()
         connectWebSocket()
     }
 
+    /** Only called from MainActivity's "change server" flow, when the
+     * account itself is being switched — there's no user-facing on/off
+     * control for sharing otherwise (see PrefsRepository). */
     private fun stopSharing() {
         running.set(false)
-        prefs.sharingEnabled = false
         try {
             locationManager?.removeUpdates(locationListener)
         } catch (e: SecurityException) {

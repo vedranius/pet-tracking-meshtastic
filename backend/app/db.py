@@ -19,6 +19,7 @@ _COLUMN_MIGRATIONS: dict[str, list[str]] = {
         "ALTER TABLE user ADD COLUMN bio VARCHAR",
         "ALTER TABLE user ADD COLUMN avatar_path VARCHAR",
         "ALTER TABLE user ADD COLUMN avatar_mime VARCHAR",
+        "ALTER TABLE user ADD COLUMN location_sharing_enabled BOOLEAN DEFAULT 1 NOT NULL",
     ],
 }
 

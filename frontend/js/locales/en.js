@@ -56,6 +56,7 @@ export default {
   "err.unsupported_language": "Unsupported language",
   "err.stream_unavailable": "Stream unavailable",
   "err.no_gateway_connected": "No gateway is currently connected",
+  "err.location_sharing_disabled": "Location sharing has been turned off by the admin",
 
   // time
   "time.never": "never",
@@ -315,4 +316,7 @@ export default {
   "admin.no_cameras": "No cameras added yet.",
   "admin.watch": "Watch",
   "admin.timeline": "Timeline",
+  "admin.location_sharing": "Location sharing",
+  "admin.location_sharing_on": "Location sharing turned on",
+  "admin.location_sharing_off": "Location sharing turned off",
 };

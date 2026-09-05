@@ -56,6 +56,7 @@ export default {
   "err.unsupported_language": "Nepodržan jezik",
   "err.stream_unavailable": "Prijenos nije dostupan",
   "err.no_gateway_connected": "Nijedan gateway trenutno nije spojen",
+  "err.location_sharing_disabled": "Dijeljenje lokacije je isključeno od strane admina",
 
   // time
   "time.never": "nikad",
@@ -315,4 +316,7 @@ export default {
   "admin.no_cameras": "Nema dodanih kamera.",
   "admin.watch": "Gledaj",
   "admin.timeline": "Timeline",
+  "admin.location_sharing": "Dijeljenje lokacije",
+  "admin.location_sharing_on": "Dijeljenje lokacije uključeno",
+  "admin.location_sharing_off": "Dijeljenje lokacije isključeno",
 };

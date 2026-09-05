@@ -35,6 +35,10 @@ class PasswordResetIn(BaseModel):
     password: str
 
 
+class LocationSharingIn(BaseModel):
+    enabled: bool
+
+
 @router.get("/users")
 def list_users():
     with get_session() as session:
@@ -43,6 +47,7 @@ def list_users():
             {
                 "id": u.id, "username": u.username, "role": u.role,
                 "bio": u.bio, "has_avatar": bool(u.avatar_path),
+                "location_sharing_enabled": u.location_sharing_enabled,
                 "created_at": u.created_at,
             }
             for u in users
@@ -69,6 +74,18 @@ def set_user_role(user_id: int, payload: RoleIn, admin: User = Depends(require_a
         if not user:
             raise HTTPException(status_code=404, detail="not_found")
         user.role = payload.role
+        session.add(user)
+        session.commit()
+    return {"ok": True}
+
+
+@router.put("/users/{user_id}/location-sharing")
+def set_location_sharing(user_id: int, payload: LocationSharingIn):
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="not_found")
+        user.location_sharing_enabled = payload.enabled
         session.add(user)
         session.commit()
     return {"ok": True}
@@ -197,6 +214,7 @@ def overview(admin: User = Depends(require_admin)):
                 "user": {
                     "id": u.id, "username": u.username, "role": u.role,
                     "bio": u.bio, "has_avatar": bool(u.avatar_path),
+                    "location_sharing_enabled": u.location_sharing_enabled,
                 },
                 "device_location": device_loc,
                 "distance_from_admin_m": distance_from_admin_m,

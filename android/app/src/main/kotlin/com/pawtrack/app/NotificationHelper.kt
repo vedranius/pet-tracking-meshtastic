@@ -40,14 +40,14 @@ object NotificationHelper {
     }
 
     fun buildSharingNotification(context: Context): android.app.Notification {
+        // Deliberately no "stop sharing" action here — there's no
+        // user-facing way to turn this off at all, only an admin can
+        // (server-side). The notification exists for transparency
+        // (required for a location-type foreground service) and as a
+        // shortcut back into the app, not as a control surface.
         val openAppIntent = PendingIntent.getActivity(
             context, 0,
             Intent(context, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val stopIntent = PendingIntent.getService(
-            context, 0,
-            Intent(context, LocationShareService::class.java).setAction(LocationShareService.ACTION_STOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         return NotificationCompat.Builder(context, SHARING_CHANNEL_ID)
@@ -55,7 +55,6 @@ object NotificationHelper {
             .setContentTitle(context.getString(R.string.notification_sharing_title))
             .setContentText(context.getString(R.string.notification_sharing_text))
             .setContentIntent(openAppIntent)
-            .addAction(0, context.getString(R.string.notification_action_stop), stopIntent)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()

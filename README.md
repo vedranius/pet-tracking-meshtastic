@@ -25,6 +25,7 @@ It grew from a single-pet, single-user script into a generic, multi-tenant, mult
 - **Self-hosted** — SQLite, no cloud dependency, one `install.sh` away from running on your own Debian/Ubuntu server.
 - **Version always visible** — the running version is printed on the login screen and in the topbar (web) or the toolbar (Android), so it's a one-glance check whether a redeploy/update actually took effect rather than guessing from behavior.
 - **Responsive down to a split-screen window** — the sidebar survives being squeezed to roughly half of a normal laptop/desktop screen (≥600px); only true phone widths fall back to the bottom nav bar.
+- **Location sharing can't be turned off by the user it belongs to** — the Android app has no on/off control for it at all (not in the menu, not in the notification); only an admin can enable/disable it per account, from the admin dashboard. This is deliberate: a user accidentally disabling their own sharing would silently break their timeline and the admin's owner-to-pet distance readout.
 
 ## Architecture
 
@@ -96,8 +97,8 @@ Each instance needs its own `uvicorn` port and, if cameras are enabled, its own 
 
 | Component | Version |
 |---|---|
-| PawTrack web app | `0.3.3` (pre-release) — shown in the app's own topbar and login screen |
-| PawTrack Android app | `0.1.1` (pre-release) — shown in the app's toolbar |
+| PawTrack web app | `0.4.0` (pre-release) — shown in the app's own topbar and login screen |
+| PawTrack Android app | `0.2.0` (pre-release) — shown in the app's toolbar |
 
 Releases are published under [Releases](../../releases) once tagged.
 

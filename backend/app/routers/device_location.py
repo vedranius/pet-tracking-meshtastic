@@ -5,7 +5,7 @@ person sharing location with them, and is unrelated to the Meshtastic
 trackers themselves."""
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 
 from ..auth import require_login
@@ -19,6 +19,11 @@ router = APIRouter(prefix="/api/device-location", tags=["device-location"])
 
 @router.post("")
 async def push_device_location(payload: DeviceLocationIn, user: User = Depends(require_login)):
+    if not user.location_sharing_enabled:
+        # Only an admin can turn this back on (see routers/admin.py) — the
+        # Android app has no on/off control of its own, so this only fires
+        # while an admin has deliberately disabled it for this account.
+        raise HTTPException(status_code=403, detail="location_sharing_disabled")
     with get_session() as session:
         loc = DeviceLocation(owner_id=user.id, **payload.model_dump())
         session.add(loc)

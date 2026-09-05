@@ -29,16 +29,11 @@
     <string name="notification_channel_alerts_desc">Obavijesti o geofenceu, bateriji i statusu s tvog PawTrack servera</string>
     <string name="notification_sharing_title">Dijeljenje lokacije</string>
     <string name="notification_sharing_text">PawTrack radi u pozadini</string>
-    <string name="notification_action_stop">Zaustavi dijeljenje</string>
 
     <string name="menu_change_server">Promijeni server</string>
-    <string name="menu_start_sharing">Pokreni dijeljenje lokacije</string>
-    <string name="menu_stop_sharing">Zaustavi dijeljenje lokacije</string>
 
     <string name="webview_load_error">Nije moguće spojiti se na %1$s. Provjeri adresu i internetsku vezu.</string>
     <string name="retry">Pokušaj ponovno</string>
-    <string name="toast_sharing_started">Dijeljenje lokacije pokrenuto</string>
-    <string name="toast_sharing_stopped">Dijeljenje lokacije zaustavljeno</string>
 
     <string name="change_server_confirm">Promijeniti adresu servera? Morat ćeš se ponovno prijaviti.</string>
 

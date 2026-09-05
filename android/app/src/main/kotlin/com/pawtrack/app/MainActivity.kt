@@ -63,7 +63,11 @@ class MainActivity : AppCompatActivity() {
             if (binding.webView.canGoBack()) binding.webView.goBack() else finish()
         }
 
-        if (prefs.sharingEnabled) startSharingService()
+        // No user-facing on/off control for this — only an admin can turn
+        // it off (server-side), so the app always tries whenever it has
+        // permission and a server configured. See routers/admin.py's
+        // location_sharing_enabled and the README.
+        startSharingService()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -168,19 +172,8 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.action_toggle_sharing).setTitle(
-            if (prefs.sharingEnabled) R.string.menu_stop_sharing else R.string.menu_start_sharing
-        )
-        return super.onPrepareOptionsMenu(menu)
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_toggle_sharing -> {
-                if (prefs.sharingEnabled) stopSharingService() else startSharingService()
-                true
-            }
             R.id.action_change_server -> {
                 AlertDialog.Builder(this)
                     .setMessage(R.string.change_server_confirm)

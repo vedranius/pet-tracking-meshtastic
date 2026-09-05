@@ -17,6 +17,11 @@ class User(SQLModel, table=True):
     bio: Optional[str] = None
     avatar_path: Optional[str] = None  # relative path under <data>/uploads/avatars/
     avatar_mime: Optional[str] = None
+    # Deliberately admin-only to change (see routers/admin.py) — the Android
+    # app has no user-facing on/off control for this at all, since a user
+    # turning it off themselves would silently break their own timeline and
+    # the admin's owner<->pet distance readout.
+    location_sharing_enabled: bool = True
     created_at: datetime = Field(default_factory=utcnow)
 
 

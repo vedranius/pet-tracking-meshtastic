@@ -29,16 +29,11 @@
     <string name="notification_channel_alerts_desc">Geofence, battery, and offline alerts from your PawTrack server</string>
     <string name="notification_sharing_title">Sharing your location</string>
     <string name="notification_sharing_text">PawTrack is running in the background</string>
-    <string name="notification_action_stop">Stop sharing</string>
 
     <string name="menu_change_server">Change server</string>
-    <string name="menu_start_sharing">Start location sharing</string>
-    <string name="menu_stop_sharing">Stop location sharing</string>
 
     <string name="webview_load_error">Couldn\'t reach %1$s. Check the address and your connection.</string>
     <string name="retry">Retry</string>
-    <string name="toast_sharing_started">Location sharing started</string>
-    <string name="toast_sharing_stopped">Location sharing stopped</string>
 
     <string name="change_server_confirm">Change the server address? You\'ll need to sign in again.</string>
 
