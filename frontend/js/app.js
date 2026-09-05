@@ -79,7 +79,9 @@ function wireLangSwitches() {
 async function bootApp(me) {
   if (!me) me = await api.get("/api/me");
   setCurrentUser(me);
-  document.getElementById("nav-admin").hidden = me.role !== "admin";
+  const isAdmin = me.role === "admin";
+  document.getElementById("nav-admin").hidden = !isAdmin;
+  document.getElementById("nav-admin-mobile").hidden = !isAdmin;
   document.getElementById("login-screen").hidden = true;
   document.getElementById("app").hidden = false;
   wireNav();
