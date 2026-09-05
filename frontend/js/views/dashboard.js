@@ -22,6 +22,56 @@ export async function mountDashboard(container) {
     attribution: "&copy; OpenStreetMap",
   }).addTo(map);
 
+  const LocateControl = L.Control.extend({
+    options: { position: "topright" },
+    onAdd() {
+      const btn = L.DomUtil.create("button", "locate-btn");
+      btn.type = "button";
+      btn.innerHTML = "📍";
+      btn.title = t("dashboard.locate_me");
+      L.DomEvent.disableClickPropagation(btn);
+      L.DomEvent.on(btn, "click", locateMe);
+      return btn;
+    },
+  });
+  map.addControl(new LocateControl());
+
+  let meMarker = null;
+  let meCircle = null;
+  function locateMe() {
+    if (!navigator.geolocation) {
+      toast(t("dashboard.locate_unsupported"), "error");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        if (meMarker) map.removeLayer(meMarker);
+        if (meCircle) map.removeLayer(meCircle);
+        meMarker = L.marker([latitude, longitude], {
+          icon: L.divIcon({
+            className: "", html: `<div class="marker-label" style="border-color:#3363c9">🧑</div>`,
+            iconSize: [30, 30], iconAnchor: [15, 15],
+          }),
+        }).addTo(map);
+        meCircle = L.circle([latitude, longitude], { radius: accuracy, color: "#3363c9", fillOpacity: 0.08 }).addTo(map);
+        map.flyTo([latitude, longitude], 16);
+      },
+      (err) => {
+        // Geolocation is only available in a "secure context" (HTTPS, or
+        // localhost) — a self-hosted server reached over a plain LAN IP
+        // (the common case here) won't get it from the browser at all,
+        // which is worth telling the user rather than a generic failure.
+        const insecure = location.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(location.hostname);
+        let msg = t("dashboard.locate_failed");
+        if (insecure) msg = t("dashboard.locate_insecure");
+        else if (err.code === err.PERMISSION_DENIED) msg = t("dashboard.locate_denied");
+        toast(msg, "error");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
   const markers = new Map(); // tracker_id -> L.Marker
   const fenceLayer = L.layerGroup().addTo(map);
   let timelineLayer = null;

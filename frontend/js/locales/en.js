@@ -88,6 +88,11 @@ export default {
   "dashboard.no_data": "No data",
   "dashboard.no_data_range": "No positions recorded in this range",
   "dashboard.open_in_maps": "Open in Google Maps",
+  "dashboard.locate_me": "My location",
+  "dashboard.locate_unsupported": "This browser doesn't support geolocation",
+  "dashboard.locate_denied": "Location permission denied — check your browser settings",
+  "dashboard.locate_insecure": "Browser location only works over HTTPS (or localhost) — this server isn't on HTTPS",
+  "dashboard.locate_failed": "Couldn't get your location",
 
   // devices
   "devices.gateways": "Gateway nodes",

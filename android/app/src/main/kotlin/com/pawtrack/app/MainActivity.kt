@@ -1,19 +1,24 @@
 package com.pawtrack.app
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.http.SslError
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.webkit.CookieManager
+import android.webkit.GeolocationPermissions
 import android.webkit.SslErrorHandler
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.addCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -22,6 +27,17 @@ import com.pawtrack.app.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: PrefsRepository
+
+    // The dashboard's "my location" button calls the browser Geolocation
+    // API inside the WebView — this bridges that to Android's own runtime
+    // permission if it wasn't already granted during onboarding.
+    private var pendingGeoCallback: GeolocationPermissions.Callback? = null
+    private var pendingGeoOrigin: String? = null
+    private val requestLocationForWebView = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        pendingGeoCallback?.invoke(pendingGeoOrigin, granted, false)
+        pendingGeoCallback = null
+        pendingGeoOrigin = null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,12 +73,26 @@ class MainActivity : AppCompatActivity() {
             javaScriptEnabled = true
             domStorageEnabled = true
             databaseEnabled = true
+            setGeolocationEnabled(true)
             // A few pixels of pinch-zoom room helps on small phones; the web
             // app itself is already responsive so this is a safety net, not
             // load-bearing.
             setSupportZoom(true)
             builtInZoomControls = true
             displayZoomControls = false
+        }
+
+        binding.webView.webChromeClient = object : WebChromeClient() {
+            override fun onGeolocationPermissionsShowPrompt(origin: String, callback: GeolocationPermissions.Callback) {
+                val granted = ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                if (granted) {
+                    callback.invoke(origin, true, false)
+                } else {
+                    pendingGeoCallback = callback
+                    pendingGeoOrigin = origin
+                    requestLocationForWebView.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                }
+            }
         }
 
         binding.webView.webViewClient = object : WebViewClient() {

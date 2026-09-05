@@ -88,6 +88,11 @@ export default {
   "dashboard.no_data": "Nema podataka",
   "dashboard.no_data_range": "Nema zabilježenih pozicija u ovom razdoblju",
   "dashboard.open_in_maps": "Otvori na Google Maps",
+  "dashboard.locate_me": "Moja lokacija",
+  "dashboard.locate_unsupported": "Ovaj preglednik ne podržava geolokaciju",
+  "dashboard.locate_denied": "Dozvola za lokaciju odbijena — provjeri postavke preglednika",
+  "dashboard.locate_insecure": "Lokacija u pregledniku radi samo preko HTTPS-a (ili localhost) — ovaj server nije na HTTPS-u",
+  "dashboard.locate_failed": "Nije moguće dohvatiti lokaciju",
 
   // devices
   "devices.gateways": "Gateway čvorovi",
