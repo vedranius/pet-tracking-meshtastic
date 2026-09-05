@@ -54,6 +54,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true // AGP 8+ disables BuildConfig generation by default
     }
 }
 
