@@ -54,7 +54,19 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="PawTrack", lifespan=lifespan)
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, same_site="lax", max_age=60 * 60 * 24 * 30)
+# A non-default cookie name matters here: browsers scope cookies by domain
+# and path only, not by port, so a second app on the same host (e.g. an
+# existing deployment on a different port) using Starlette's default
+# "session" cookie name would silently overwrite this one's cookie and vice
+# versa — whichever app last set it "wins" until the next login, causing
+# random-looking 401s in the other app.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    session_cookie="pawtrack_session",
+    same_site="lax",
+    max_age=60 * 60 * 24 * 30,
+)
 
 app.include_router(auth.router)
 app.include_router(gateways.router)
