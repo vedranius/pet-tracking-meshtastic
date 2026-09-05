@@ -12,6 +12,17 @@ function fmtDistance(m) {
   return `${(m / 1000).toFixed(1)} km`;
 }
 
+function gatewayStatusBadge(status) {
+  const map = {
+    connected: [t("devices.status_connected"), "badge-ok"],
+    disconnected: [t("devices.status_disconnected"), "badge-warn"],
+    error: [t("devices.status_error"), "badge-err"],
+    unknown: [t("devices.status_unknown"), "badge-mut"],
+  };
+  const [label, cls] = map[status] || map.unknown;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
 export async function mountAdmin(container) {
   container.innerHTML = `
     <div class="page">
@@ -102,6 +113,7 @@ export async function mountAdmin(container) {
             </div>
           </div>
         </div>
+        <div class="admin-section-label">🐾 ${t("admin.pets")}</div>
         ${row.trackers.length ? `
           <div class="admin-pet-list">
             ${row.trackers.map((tr) => `
@@ -113,10 +125,42 @@ export async function mountAdmin(container) {
                   ${tr.distance_from_owner_m != null ? ` · ${fmtDistance(tr.distance_from_owner_m)} ${t("admin.from_owner")}` : ""}
                   ${tr.photo_count ? ` · 📷 ${tr.photo_count}` : ""}
                 </span>
+                ${tr.geofences.length ? `
+                  <div class="admin-geofence-chips">
+                    ${tr.geofences.map((g) => `<span class="badge ${g.enabled ? "badge-ok" : "badge-mut"}" title="${g.shape}">📐 ${escapeHtml(g.name)}</span>`).join("")}
+                  </div>
+                ` : ""}
               </div>
             `).join("")}
           </div>
-        ` : `<div class="muted" style="font-size:13px;margin-top:6px">${t("admin.no_pets")}</div>`}
+        ` : `<div class="muted" style="font-size:13px">${t("admin.no_pets")}</div>`}
+
+        <div class="admin-section-label">📡 ${t("admin.gateways")}</div>
+        ${row.gateways.length ? `
+          <div class="admin-pet-list">
+            ${row.gateways.map((g) => `
+              <div class="admin-pet-row">
+                <span>${escapeHtml(g.name)}</span>
+                <span class="muted" style="font-size:12px">${escapeHtml(g.ip_address)}</span>
+                ${gatewayStatusBadge(g.status)}
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="muted" style="font-size:13px">${t("admin.no_gateways")}</div>`}
+
+        <div class="admin-section-label">📹 ${t("admin.cameras")}</div>
+        ${row.cameras.length ? `
+          <div class="admin-pet-list">
+            ${row.cameras.map((c) => `
+              <div class="admin-pet-row">
+                <span>${escapeHtml(c.name)}</span>
+                ${c.is_ptz ? `<span class="badge badge-mut">PTZ</span>` : ""}
+                <button class="btn btn-sm" data-watch-cam="${c.id}" data-cam-name="${escapeHtml(c.name)}">▶ ${t("admin.watch")}</button>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="muted" style="font-size:13px">${t("admin.no_cameras")}</div>`}
+
         <div class="card-row" style="margin-top:10px">
           <button class="btn btn-sm" data-role="${row.user.id}" data-current-role="${row.user.role}">
             ${row.user.role === "admin" ? t("admin.demote") : t("admin.promote")}
@@ -126,6 +170,10 @@ export async function mountAdmin(container) {
         </div>
       </div>
     `).join("");
+
+    el.querySelectorAll("[data-watch-cam]").forEach((btn) => {
+      btn.addEventListener("click", () => openWatchCameraModal(btn.dataset.watchCam, btn.dataset.camName));
+    });
 
     el.querySelectorAll("[data-del-user]").forEach((btn) => {
       btn.addEventListener("click", async () => {
@@ -180,6 +228,31 @@ export async function mountAdmin(container) {
         await load();
       },
     });
+  }
+
+  function openWatchCameraModal(camId, camName) {
+    let hls = null;
+    const { modal } = openModal({
+      title: `📹 ${camName}`,
+      submitLabel: t("common.close"),
+      bodyHtml: `<video id="admin-watch-video" playsinline muted controls autoplay style="width:100%;border-radius:8px;background:#000"></video>`,
+      onSubmit: async () => true,
+      onClose: () => hls?.destroy(),
+    });
+    const video = modal.querySelector("#admin-watch-video");
+    const src = `/api/cameras/${camId}/hls/index.m3u8`;
+    if (window.Hls && window.Hls.isSupported()) {
+      hls = new window.Hls({ liveDurationInfinity: true, maxLiveSyncPlaybackRate: 1.5 });
+      hls.on(window.Hls.Events.ERROR, (_evt, data) => {
+        if (data.fatal) toast(t("cameras.stream_failed", { name: camName }), "error");
+      });
+      hls.loadSource(src);
+      hls.attachMedia(video);
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = src;
+    } else {
+      toast(t("cameras.unsupported_browser"), "error");
+    }
   }
 
   function openResetPasswordModal(userId) {

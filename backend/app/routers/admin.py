@@ -143,6 +143,21 @@ def overview(admin: User = Depends(require_admin)):
                 t.id: len(session.exec(select(PetPhoto).where(PetPhoto.tracker_id == t.id)).all())
                 for t in trackers
             }
+            geofences_by_tracker: dict[int, list] = {}
+            for t in trackers:
+                geofences_by_tracker[t.id] = session.exec(
+                    select(Geofence).where(Geofence.tracker_id == t.id)
+                ).all()
+
+            gateways = session.exec(select(Gateway).where(Gateway.owner_id == u.id)).all()
+            gateway_rows = [
+                {"id": g.id, "name": g.name, "ip_address": g.ip_address, "enabled": g.enabled, "status": g.status}
+                for g in gateways
+            ]
+
+            cameras = session.exec(select(Camera).where(Camera.owner_id == u.id)).all()
+            camera_rows = [{"id": c.id, "name": c.name, "is_ptz": c.is_ptz} for c in cameras]
+
             device_loc = session.exec(
                 select(DeviceLocation).where(DeviceLocation.owner_id == u.id).order_by(DeviceLocation.ts.desc())
             ).first()
@@ -171,6 +186,10 @@ def overview(admin: User = Depends(require_admin)):
                     "last_position_at": t.last_position_at,
                     "distance_from_owner_m": dist,
                     "photo_count": photo_counts.get(t.id, 0),
+                    "geofences": [
+                        {"id": g.id, "name": g.name, "shape": g.shape, "enabled": g.enabled}
+                        for g in geofences_by_tracker.get(t.id, [])
+                    ],
                 })
 
             result.append({
@@ -181,5 +200,7 @@ def overview(admin: User = Depends(require_admin)):
                 "device_location": device_loc,
                 "distance_from_admin_m": distance_from_admin_m,
                 "trackers": tracker_rows,
+                "gateways": gateway_rows,
+                "cameras": camera_rows,
             })
         return {"admin_location": admin_location, "users": result}

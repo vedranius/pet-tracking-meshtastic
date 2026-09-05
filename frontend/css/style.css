@@ -287,8 +287,10 @@ h1, h2, h3 { margin: 0 0 8px; }
 .lang-switch-floating { position: absolute; top: 14px; right: 14px; z-index: 30; background: var(--surface); }
 
 /* admin panel */
-.admin-pet-list { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
-.admin-pet-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.admin-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); margin-top: 12px; margin-bottom: 4px; }
+.admin-pet-list { padding-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+.admin-pet-row { display: flex; align-items: center; gap: 8px; font-size: 13px; flex-wrap: wrap; }
+.admin-geofence-chips { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; margin-top: 2px; }
 .position-maps { font-size: 16px; text-decoration: none; flex-shrink: 0; }
 
 /* current user (topbar) */

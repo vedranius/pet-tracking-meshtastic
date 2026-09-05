@@ -300,4 +300,10 @@ export default {
   "admin.role_changed": "Uloga promijenjena",
   "admin.reset_password": "Resetiraj lozinku",
   "admin.password_reset_done": "Lozinka resetirana",
+  "admin.pets": "Ljubimci",
+  "admin.gateways": "Gateway čvorovi",
+  "admin.no_gateways": "Nema dodanih gateway čvorova.",
+  "admin.cameras": "Kamere",
+  "admin.no_cameras": "Nema dodanih kamera.",
+  "admin.watch": "Gledaj",
 };

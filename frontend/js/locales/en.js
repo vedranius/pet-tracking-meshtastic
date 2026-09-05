@@ -300,4 +300,10 @@ export default {
   "admin.role_changed": "Role changed",
   "admin.reset_password": "Reset password",
   "admin.password_reset_done": "Password reset",
+  "admin.pets": "Pets",
+  "admin.gateways": "Gateway nodes",
+  "admin.no_gateways": "No gateway nodes added yet.",
+  "admin.cameras": "Cameras",
+  "admin.no_cameras": "No cameras added yet.",
+  "admin.watch": "Watch",
 };

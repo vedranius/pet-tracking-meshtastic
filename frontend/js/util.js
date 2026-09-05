@@ -43,7 +43,7 @@ export function el(html) {
 
 let modalStack = 0;
 
-export function openModal({ title, bodyHtml, onMount, onSubmit, submitLabel }) {
+export function openModal({ title, bodyHtml, onMount, onSubmit, submitLabel, onClose }) {
   const backdrop = el(`<div class="modal-backdrop"></div>`);
   const modal = el(`
     <div class="modal">
@@ -63,6 +63,7 @@ export function openModal({ title, bodyHtml, onMount, onSubmit, submitLabel }) {
   const close = () => {
     backdrop.remove();
     modalStack--;
+    onClose?.();
   };
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
   modal.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", close));

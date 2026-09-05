@@ -63,6 +63,15 @@ def _own_camera(session, camera_id: int, owner_id: int) -> Camera:
     return cam
 
 
+def _viewable_camera(session, camera_id: int, user: User) -> Camera:
+    """Like _own_camera, but also lets an admin watch (read-only) another
+    user's stream — configuring/controlling it stays owner-only."""
+    cam = session.get(Camera, camera_id)
+    if not cam or (cam.owner_id != user.id and user.role != "admin"):
+        raise HTTPException(status_code=404, detail="not_found")
+    return cam
+
+
 def _require_ptz(cam: Camera) -> Camera:
     if not cam.is_ptz or not cam.ptz_host or not cam.ptz_user or not cam.ptz_password:
         raise HTTPException(status_code=400, detail="ptz_not_configured")
@@ -127,7 +136,7 @@ async def delete_camera(camera_id: int, user: User = Depends(require_login)):
 @router.get("/{cam_id}/hls/{path:path}")
 async def hls_proxy(cam_id: int, path: str, request: Request, user: User = Depends(require_login)):
     with get_session() as session:
-        _own_camera(session, cam_id, user.id)
+        _viewable_camera(session, cam_id, user)
     url = f"{MEDIAMTX_HLS_BASE}/cam{cam_id}/{path}"
     # mediamtx's manifests embed a "?session=..." query param on every
     # sub-playlist/segment URL (its cookie-check fallback for plain HTTP —
