@@ -84,7 +84,11 @@ export default {
   "dashboard.range_1h": "Last hour",
   "dashboard.range_6h": "Last 6h",
   "dashboard.range_24h": "Last 24h",
+  "dashboard.range_3d": "Last 3 days",
   "dashboard.range_7d": "Last 7 days",
+  "dashboard.range_14d": "Last 14 days",
+  "dashboard.or_pick_day": "or pick a day:",
+  "dashboard.back_to_range": "Back to range",
   "dashboard.no_data": "No data",
   "dashboard.no_data_range": "No positions recorded in this range",
   "dashboard.open_in_maps": "Open in Google Maps",
@@ -306,4 +310,5 @@ export default {
   "admin.cameras": "Cameras",
   "admin.no_cameras": "No cameras added yet.",
   "admin.watch": "Watch",
+  "admin.timeline": "Timeline",
 };

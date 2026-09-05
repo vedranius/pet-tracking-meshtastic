@@ -11,6 +11,7 @@ from ..models import Channel, Event, Gateway, PetPhoto, Position, Telemetry, Tra
 from ..schemas import BuzzerConfigIn, PositionConfigIn, PowerConfigIn, RingIn, TrackerIn
 from ..services import mesh_admin
 from ..services.mesh_manager import mesh_manager
+from ..services.timerange import resolve_range
 from ..services.uploads import delete_image, full_path, save_image
 
 log = logging.getLogger("pawtrack.trackers")
@@ -67,16 +68,19 @@ def delete_tracker(tracker_id: int, user: User = Depends(require_login)):
 
 
 @router.get("/{tracker_id}/positions")
-def tracker_positions(tracker_id: int, hours: int = Query(default=24, le=24 * 30), user: User = Depends(require_login)):
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+def tracker_positions(
+    tracker_id: int,
+    hours: int = Query(default=24, le=24 * 30),
+    date: str | None = Query(default=None, description="YYYY-MM-DD (UTC) — overrides `hours` to one specific day"),
+    user: User = Depends(require_login),
+):
+    since, until = resolve_range(hours, date)
     with get_session() as session:
         _own_tracker(session, tracker_id, user.id)
-        rows = session.exec(
-            select(Position)
-            .where(Position.tracker_id == tracker_id, Position.ts >= since)
-            .order_by(Position.ts)
-        ).all()
-        return rows
+        stmt = select(Position).where(Position.tracker_id == tracker_id, Position.ts >= since)
+        if until:
+            stmt = stmt.where(Position.ts < until)
+        return session.exec(stmt.order_by(Position.ts)).all()
 
 
 @router.get("/{tracker_id}/telemetry")

@@ -1,9 +1,10 @@
 import { api } from "../api.js";
 import { state, subscribe, trackerById } from "../state.js";
 import { onWSMessage } from "../ws.js";
-import { timeAgo, parseApiDate } from "../util.js";
+import { timeAgo } from "../util.js";
 import { toast } from "../toast.js";
 import { t, onLocaleChange } from "../i18n.js";
+import { openTimelinePanel } from "../timelinePanel.js";
 
 const DEFAULT_CENTER = [45.1, 15.2];
 
@@ -74,7 +75,7 @@ export async function mountDashboard(container) {
 
   const markers = new Map(); // tracker_id -> L.Marker
   const fenceLayer = L.layerGroup().addTo(map);
-  let timelineLayer = null;
+  let currentTimeline = null;
 
   function markerIcon(tracker) {
     return L.divIcon({
@@ -205,110 +206,21 @@ export async function mountDashboard(container) {
     renderPanel();
   }
 
-  let openTimelineTrackerId = null;
-  async function openTimeline(trackerId) {
-    openTimelineTrackerId = trackerId;
+  function openTimeline(trackerId) {
     const tracker = trackerById(trackerId);
     if (!tracker) return;
-    if (timelineLayer) { map.removeLayer(timelineLayer); timelineLayer = null; }
-
-    let bar = document.getElementById("timeline-bar");
-    if (!bar) {
-      bar = document.createElement("div");
-      bar.id = "timeline-bar";
-      bar.className = "card";
-      bar.style.position = "absolute";
-      bar.style.left = "10px";
-      bar.style.right = "10px";
-      bar.style.top = "10px";
-      bar.style.zIndex = "1000";
-      bar.style.maxHeight = "82vh";
-      bar.style.overflowY = "auto";
-      container.querySelector(".dashboard").appendChild(bar);
-    }
-    bar.innerHTML = `
-      <div class="card-row">
-        <b>📈 ${t("dashboard.timeline")} — ${escapeHtml(tracker.name)}</b>
-        <button class="btn btn-sm" id="timeline-close">✕</button>
-      </div>
-      <select id="timeline-range">
-        <option value="1">${t("dashboard.range_1h")}</option>
-        <option value="6">${t("dashboard.range_6h")}</option>
-        <option value="24" selected>${t("dashboard.range_24h")}</option>
-        <option value="168">${t("dashboard.range_7d")}</option>
-      </select>
-      <div class="timeline-bar">
-        <input type="range" id="timeline-slider" min="0" max="0" value="0" disabled>
-      </div>
-      <div id="timeline-label" class="muted" style="font-size:12px;text-align:center">${t("dashboard.no_data")}</div>
-      <div id="timeline-history" class="position-history"></div>
-    `;
-    document.getElementById("timeline-close").onclick = () => {
-      bar.remove();
-      if (timelineLayer) { map.removeLayer(timelineLayer); timelineLayer = null; }
-      openTimelineTrackerId = null;
-    };
-    const rangeSelect = document.getElementById("timeline-range");
-    rangeSelect.onchange = () => loadTimeline(trackerId, Number(rangeSelect.value));
-    await loadTimeline(trackerId, 24);
-  }
-
-  let timelineGhost = null;
-  async function loadTimeline(trackerId, hours) {
-    const positions = await api.get(`/api/trackers/${trackerId}/positions?hours=${hours}`);
-    if (timelineLayer) { map.removeLayer(timelineLayer); timelineLayer = null; }
-    const slider = document.getElementById("timeline-slider");
-    const label = document.getElementById("timeline-label");
-    const historyEl = document.getElementById("timeline-history");
-    if (!positions.length) {
-      slider.disabled = true;
-      slider.max = 0;
-      label.textContent = t("dashboard.no_data_range");
-      historyEl.innerHTML = "";
-      return;
-    }
-    const latlngs = positions.map((p) => [p.lat, p.lon]);
-    timelineLayer = L.layerGroup().addTo(map);
-    L.polyline(latlngs, { color: "#3363c9", weight: 3, opacity: 0.7 }).addTo(timelineLayer);
-    timelineGhost = L.circleMarker(latlngs[latlngs.length - 1], {
-      radius: 8, color: "#3363c9", fillColor: "#3363c9", fillOpacity: 1,
-    }).addTo(timelineLayer);
-    map.fitBounds(latlngs, { maxZoom: 17, padding: [30, 30] });
-
-    slider.disabled = false;
-    slider.max = String(positions.length - 1);
-    slider.value = String(positions.length - 1);
-    const fmt = (p) => parseApiDate(p.ts).toLocaleString();
-    const updateLabel = (idx) => {
-      const p = positions[idx];
-      timelineGhost.setLatLng([p.lat, p.lon]);
-      label.textContent = `${fmt(p)}${p.speed != null ? ` · ${p.speed.toFixed(1)} m/s` : ""}`;
-      historyEl.querySelectorAll(".position-row").forEach((row) => {
-        row.classList.toggle("active", Number(row.dataset.idx) === idx);
-      });
-    };
-
-    // most recent first, so the newest fix is always at the top of the list
-    historyEl.innerHTML = positions.map((p, idx) => `
-      <div class="position-row" data-idx="${idx}">
-        <div>
-          <div class="position-time">${fmt(p)}</div>
-          <div class="position-coords">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}${p.speed != null ? ` · ${p.speed.toFixed(1)} m/s` : ""}</div>
-        </div>
-        <a class="position-maps" href="https://maps.google.com/?q=${p.lat},${p.lon}" target="_blank" rel="noopener" title="${t("dashboard.open_in_maps")}">🗺️</a>
-      </div>
-    `).reverse().join("");
-    historyEl.querySelectorAll(".position-row").forEach((row) => {
-      row.addEventListener("click", (e) => {
-        if (e.target.closest(".position-maps")) return;
-        const idx = Number(row.dataset.idx);
-        slider.value = String(idx);
-        updateLabel(idx);
-      });
+    currentTimeline?.close();
+    currentTimeline = openTimelinePanel({
+      container: container.querySelector(".dashboard"),
+      map,
+      title: `${t("dashboard.timeline")} — ${tracker.name}`,
+      color: tracker.color,
+      fetchPositions: (params) => {
+        const q = params.date ? `date=${params.date}` : `hours=${params.hours}`;
+        return api.get(`/api/trackers/${trackerId}/positions?${q}`);
+      },
+      onCloseExtra: () => { currentTimeline = null; },
     });
-
-    slider.oninput = () => updateLabel(Number(slider.value));
-    updateLabel(positions.length - 1);
   }
 
   const unsubState = subscribe(() => { syncMarkers(); refreshFences(); });

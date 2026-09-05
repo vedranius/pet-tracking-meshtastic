@@ -239,6 +239,13 @@ h1, h2, h3 { margin: 0 0 8px; }
 .timeline-bar { display: flex; align-items: center; gap: 10px; padding: 8px 4px 2px; }
 .timeline-bar input[type=range] { flex: 1; }
 
+.timeline-panel-bar {
+  position: absolute; left: 10px; right: 10px; top: 10px; z-index: 1000;
+  max-height: 82vh; overflow-y: auto;
+}
+.timeline-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+.timeline-controls select, .timeline-controls input[type=date] { width: auto; }
+
 .event-row { display: flex; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
 .event-row:last-child { border-bottom: none; }
 .event-icon { font-size: 20px; }

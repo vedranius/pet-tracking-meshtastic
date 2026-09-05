@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import select
 
@@ -21,6 +21,7 @@ from ..models import (
 )
 from ..schemas import RegisterIn
 from ..services.geo import haversine_m
+from ..services.timerange import resolve_range
 from ..services.uploads import delete_image
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin)])
@@ -204,3 +205,37 @@ def overview(admin: User = Depends(require_admin)):
                 "cameras": camera_rows,
             })
         return {"admin_location": admin_location, "users": result}
+
+
+# -- history / timeline (any pet or user, not just the admin's own) --------
+
+@router.get("/trackers/{tracker_id}/positions")
+def admin_tracker_positions(
+    tracker_id: int,
+    hours: int = Query(default=24, le=24 * 30),
+    date: str | None = Query(default=None, description="YYYY-MM-DD (UTC) — overrides `hours` to one specific day"),
+):
+    since, until = resolve_range(hours, date)
+    with get_session() as session:
+        if not session.get(Tracker, tracker_id):
+            raise HTTPException(status_code=404, detail="not_found")
+        stmt = select(Position).where(Position.tracker_id == tracker_id, Position.ts >= since)
+        if until:
+            stmt = stmt.where(Position.ts < until)
+        return session.exec(stmt.order_by(Position.ts)).all()
+
+
+@router.get("/users/{user_id}/device-locations")
+def admin_device_locations(
+    user_id: int,
+    hours: int = Query(default=24, le=24 * 30),
+    date: str | None = Query(default=None, description="YYYY-MM-DD (UTC) — overrides `hours` to one specific day"),
+):
+    since, until = resolve_range(hours, date)
+    with get_session() as session:
+        if not session.get(User, user_id):
+            raise HTTPException(status_code=404, detail="not_found")
+        stmt = select(DeviceLocation).where(DeviceLocation.owner_id == user_id, DeviceLocation.ts >= since)
+        if until:
+            stmt = stmt.where(DeviceLocation.ts < until)
+        return session.exec(stmt.order_by(DeviceLocation.ts)).all()

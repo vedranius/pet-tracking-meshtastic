@@ -3,6 +3,7 @@ import { onWSMessage } from "../ws.js";
 import { timeAgo, confirmDialog, openModal } from "../util.js";
 import { toast } from "../toast.js";
 import { t, onLocaleChange } from "../i18n.js";
+import { openTimelinePanel } from "../timelinePanel.js";
 
 const DEFAULT_CENTER = [45.1, 15.2];
 
@@ -112,6 +113,7 @@ export async function mountAdmin(container) {
               ${row.user.bio ? `<div class="muted" style="font-size:12px;margin-top:2px">${escapeHtml(row.user.bio)}</div>` : ""}
             </div>
           </div>
+          <button class="btn btn-sm" data-timeline-user="${row.user.id}" data-user-name="${escapeHtml(row.user.username)}">📈 ${t("admin.timeline")}</button>
         </div>
         <div class="admin-section-label">🐾 ${t("admin.pets")}</div>
         ${row.trackers.length ? `
@@ -125,6 +127,7 @@ export async function mountAdmin(container) {
                   ${tr.distance_from_owner_m != null ? ` · ${fmtDistance(tr.distance_from_owner_m)} ${t("admin.from_owner")}` : ""}
                   ${tr.photo_count ? ` · 📷 ${tr.photo_count}` : ""}
                 </span>
+                <button class="btn btn-sm" data-timeline-pet="${tr.id}" data-pet-name="${escapeHtml(tr.name)}" data-pet-color="${tr.color}">📈 ${t("admin.timeline")}</button>
                 ${tr.geofences.length ? `
                   <div class="admin-geofence-chips">
                     ${tr.geofences.map((g) => `<span class="badge ${g.enabled ? "badge-ok" : "badge-mut"}" title="${g.shape}">📐 ${escapeHtml(g.name)}</span>`).join("")}
@@ -173,6 +176,14 @@ export async function mountAdmin(container) {
 
     el.querySelectorAll("[data-watch-cam]").forEach((btn) => {
       btn.addEventListener("click", () => openWatchCameraModal(btn.dataset.watchCam, btn.dataset.camName));
+    });
+
+    el.querySelectorAll("[data-timeline-pet]").forEach((btn) => {
+      btn.addEventListener("click", () => openPetTimeline(btn.dataset.timelinePet, btn.dataset.petName, btn.dataset.petColor));
+    });
+
+    el.querySelectorAll("[data-timeline-user]").forEach((btn) => {
+      btn.addEventListener("click", () => openUserTimeline(btn.dataset.timelineUser, btn.dataset.userName));
     });
 
     el.querySelectorAll("[data-del-user]").forEach((btn) => {
@@ -227,6 +238,37 @@ export async function mountAdmin(container) {
         toast(t("admin.user_created"), "success");
         await load();
       },
+    });
+  }
+
+  let currentTimeline = null;
+  function openPetTimeline(trackerId, petName, color) {
+    currentTimeline?.close();
+    currentTimeline = openTimelinePanel({
+      container: document.getElementById("admin-map"),
+      map,
+      title: `${t("admin.timeline")} — ${petName}`,
+      color,
+      fetchPositions: (params) => {
+        const q = params.date ? `date=${params.date}` : `hours=${params.hours}`;
+        return api.get(`/api/admin/trackers/${trackerId}/positions?${q}`);
+      },
+      onCloseExtra: () => { currentTimeline = null; },
+    });
+  }
+
+  function openUserTimeline(userId, username) {
+    currentTimeline?.close();
+    currentTimeline = openTimelinePanel({
+      container: document.getElementById("admin-map"),
+      map,
+      title: `${t("admin.timeline")} — ${username}`,
+      color: "#3363c9",
+      fetchPositions: (params) => {
+        const q = params.date ? `date=${params.date}` : `hours=${params.hours}`;
+        return api.get(`/api/admin/users/${userId}/device-locations?${q}`);
+      },
+      onCloseExtra: () => { currentTimeline = null; },
     });
   }
 

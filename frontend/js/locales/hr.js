@@ -84,7 +84,11 @@ export default {
   "dashboard.range_1h": "Zadnji sat",
   "dashboard.range_6h": "Zadnjih 6h",
   "dashboard.range_24h": "Zadnja 24h",
+  "dashboard.range_3d": "Zadnja 3 dana",
   "dashboard.range_7d": "Zadnjih 7 dana",
+  "dashboard.range_14d": "Zadnjih 14 dana",
+  "dashboard.or_pick_day": "ili odaberi dan:",
+  "dashboard.back_to_range": "Natrag na raspon",
   "dashboard.no_data": "Nema podataka",
   "dashboard.no_data_range": "Nema zabilježenih pozicija u ovom razdoblju",
   "dashboard.open_in_maps": "Otvori na Google Maps",
@@ -306,4 +310,5 @@ export default {
   "admin.cameras": "Kamere",
   "admin.no_cameras": "Nema dodanih kamera.",
   "admin.watch": "Gledaj",
+  "admin.timeline": "Timeline",
 };
