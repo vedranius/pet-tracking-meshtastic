@@ -79,6 +79,18 @@ class Tracker(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
 
+class TrackerCaretaker(SQLModel, table=True):
+    """Extra read access to a pet for someone other than its owner — lets a
+    family member with their own account see a shared pet's live location,
+    geofences, and timeline on their own Dashboard. Deliberately read-only:
+    editing the pet, its geofences, or pushing radio config stays owner (or
+    admin) only, since those are control actions on physical hardware."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tracker_id: int = Field(foreign_key="tracker.id", index=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class Geofence(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     owner_id: int = Field(foreign_key="user.id", index=True)

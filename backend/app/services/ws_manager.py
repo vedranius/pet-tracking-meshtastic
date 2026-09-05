@@ -39,11 +39,13 @@ class WSManager:
             targets = [ws for ws, (_, role) in self._clients.items() if role == "admin"]
         await self._send_all(targets, payload)
 
-    async def broadcast_owner(self, payload: dict, owner_id: int) -> None:
-        """Send to the resource owner and every admin — never to other
-        regular users, since positions/alerts are private to their owner."""
+    async def broadcast_owner(self, payload: dict, recipient_ids: set[int]) -> None:
+        """Send to every id in `recipient_ids` (the resource's owner, plus
+        any tracker caretakers for tracker-scoped events) and every admin —
+        never to other regular users, since positions/alerts are private to
+        whoever owns or has been given access to that resource."""
         async with self._lock:
-            targets = [ws for ws, (uid, role) in self._clients.items() if uid == owner_id or role == "admin"]
+            targets = [ws for ws, (uid, role) in self._clients.items() if uid in recipient_ids or role == "admin"]
         await self._send_all(targets, payload)
 
 

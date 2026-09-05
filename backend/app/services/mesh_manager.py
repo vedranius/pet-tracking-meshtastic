@@ -13,6 +13,7 @@ from sqlmodel import select
 from ..db import get_session
 from ..models import Event, Gateway, Geofence, Position, Telemetry, Tracker, User
 from . import geo
+from .access import tracker_recipient_ids
 from .telegram import send_telegram
 from .ws_manager import ws_manager
 
@@ -168,7 +169,7 @@ class MeshManager:
     def _emit_owner(self, payload: dict, owner_id: int) -> None:
         if self._loop is None:
             return
-        asyncio.run_coroutine_threadsafe(ws_manager.broadcast_owner(payload, owner_id), self._loop)
+        asyncio.run_coroutine_threadsafe(ws_manager.broadcast_owner(payload, {owner_id}), self._loop)
 
     async def _handle_packet(self, gateway_id: int, packet: dict) -> None:
         try:
@@ -227,7 +228,7 @@ class MeshManager:
             "tracker_id": tracker.id,
             "lat": lat, "lon": lon, "altitude": alt, "speed": speed,
             "ts": record.ts.isoformat(),
-        }, tracker.owner_id)
+        }, tracker_recipient_ids(session, tracker))
 
         await self._evaluate_geofences(session, tracker, lat, lon)
 
@@ -253,7 +254,7 @@ class MeshManager:
             "tracker_id": tracker.id,
             "battery_level": batt, "voltage": volt,
             "ts": record.ts.isoformat(),
-        }, tracker.owner_id)
+        }, tracker_recipient_ids(session, tracker))
 
         if batt is not None:
             if batt <= tracker.battery_alert_threshold and tracker.id not in self._battery_alerted:
@@ -329,7 +330,7 @@ class MeshManager:
             "tracker_id": tracker.id,
             "message": message,
             "ts": event.ts.isoformat(),
-        }, tracker.owner_id)
+        }, tracker_recipient_ids(session, tracker))
         owner = session.get(User, tracker.owner_id)
         lang = owner.language if owner else "hr"
         await send_telegram(session, tracker.owner_id, render_event_text(type_, message, lang))

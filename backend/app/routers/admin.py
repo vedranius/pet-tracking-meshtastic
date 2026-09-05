@@ -17,6 +17,7 @@ from ..models import (
     Setting,
     Telemetry,
     Tracker,
+    TrackerCaretaker,
     User,
 )
 from ..schemas import RegisterIn
@@ -47,6 +48,15 @@ class CopySettingsIn(BaseModel):
     include_channels: bool = True
     include_pets: bool = True
     include_cameras: bool = True
+
+
+class CaretakerIn(BaseModel):
+    user_id: int
+
+
+class MergeTrackersIn(BaseModel):
+    primary_tracker_id: int
+    duplicate_tracker_ids: list[int]
 
 
 @router.get("/users")
@@ -139,6 +149,12 @@ def delete_user(user_id: int, admin: User = Depends(require_admin)):
             for preset in session.exec(select(CameraPreset).where(CameraPreset.camera_id.in_(camera_ids))).all():
                 session.delete(preset)
 
+        if tracker_ids:
+            for row in session.exec(select(TrackerCaretaker).where(TrackerCaretaker.tracker_id.in_(tracker_ids))).all():
+                session.delete(row)
+        for row in session.exec(select(TrackerCaretaker).where(TrackerCaretaker.user_id == user_id)).all():
+            session.delete(row)
+
         for model in (Geofence, Tracker, Channel, Gateway, Camera, Event, DeviceLocation):
             for row in session.exec(select(model).where(model.owner_id == user_id)).all():
                 session.delete(row)
@@ -160,9 +176,13 @@ def delete_user(user_id: int, admin: User = Depends(require_admin)):
 def overview(admin: User = Depends(require_admin)):
     with get_session() as session:
         users = session.exec(select(User)).all()
+        usernames = {u.id: u.username for u in users}
         admin_location = session.exec(
             select(DeviceLocation).where(DeviceLocation.owner_id == admin.id).order_by(DeviceLocation.ts.desc())
         ).first()
+        caretakers_by_tracker: dict[int, list[int]] = {}
+        for tc in session.exec(select(TrackerCaretaker)).all():
+            caretakers_by_tracker.setdefault(tc.tracker_id, []).append(tc.user_id)
 
         result = []
         for u in users:
@@ -217,6 +237,10 @@ def overview(admin: User = Depends(require_admin)):
                     "geofences": [
                         {"id": g.id, "name": g.name, "shape": g.shape, "enabled": g.enabled}
                         for g in geofences_by_tracker.get(t.id, [])
+                    ],
+                    "caretakers": [
+                        {"id": uid, "username": usernames.get(uid, "?")}
+                        for uid in caretakers_by_tracker.get(t.id, [])
                     ],
                 })
 
@@ -354,3 +378,154 @@ async def copy_settings(payload: CopySettingsIn):
         await mediamtx_admin.sync_path(cam_id, rtsp_url)
 
     return {"ok": True, "copied": counts}
+
+
+# -- caretakers (share one pet's live data with more than one account) -----
+# The owner (Tracker.owner_id) keeps exclusive control — editing the pet,
+# its geofences, and pushing radio config all stay owner/admin-only. A
+# caretaker only gets read access: the pet shows up on their own Dashboard
+# (live position, geofences, timeline) as if they were the owner.
+
+@router.post("/trackers/{tracker_id}/caretakers")
+def add_caretaker(tracker_id: int, payload: CaretakerIn):
+    with get_session() as session:
+        tracker = session.get(Tracker, tracker_id)
+        if not tracker:
+            raise HTTPException(status_code=404, detail="not_found")
+        if not session.get(User, payload.user_id):
+            raise HTTPException(status_code=404, detail="user_not_found")
+        if payload.user_id == tracker.owner_id:
+            raise HTTPException(status_code=400, detail="already_owner")
+        existing = session.exec(
+            select(TrackerCaretaker).where(
+                TrackerCaretaker.tracker_id == tracker_id, TrackerCaretaker.user_id == payload.user_id
+            )
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="already_caretaker")
+        session.add(TrackerCaretaker(tracker_id=tracker_id, user_id=payload.user_id))
+        session.commit()
+    return {"ok": True}
+
+
+@router.delete("/trackers/{tracker_id}/caretakers/{user_id}")
+def remove_caretaker(tracker_id: int, user_id: int):
+    with get_session() as session:
+        row = session.exec(
+            select(TrackerCaretaker).where(
+                TrackerCaretaker.tracker_id == tracker_id, TrackerCaretaker.user_id == user_id
+            )
+        ).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="not_found")
+        session.delete(row)
+        session.commit()
+    return {"ok": True}
+
+
+# -- merge duplicate pets ---------------------------------------------------
+# Before caretakers existed, the only way to share a pet across accounts was
+# Copy settings, which clones it as a second independent Tracker row — so a
+# household using that ends up with the same pet listed once per account.
+# This finds those look-alike groups and lets an admin fold them into one
+# real Tracker with everyone else added as a caretaker instead.
+
+@router.get("/duplicate-pets")
+def duplicate_pets():
+    with get_session() as session:
+        trackers = session.exec(select(Tracker).order_by(Tracker.created_at)).all()
+        usernames = {u.id: u.username for u in session.exec(select(User)).all()}
+        photo_counts: dict[int, int] = {}
+        for photo in session.exec(select(PetPhoto)).all():
+            photo_counts[photo.tracker_id] = photo_counts.get(photo.tracker_id, 0) + 1
+
+        groups: dict[tuple[str, str | None], list[Tracker]] = {}
+        for t in trackers:
+            key = (t.name.strip().lower(), t.species)
+            groups.setdefault(key, []).append(t)
+
+        return [
+            {
+                "key": f"{key[0]}|{key[1] or ''}",
+                "trackers": [
+                    {
+                        "id": t.id,
+                        "name": t.name,
+                        "species": t.species,
+                        "owner_id": t.owner_id,
+                        "owner_username": usernames.get(t.owner_id, "?"),
+                        "photo_count": photo_counts.get(t.id, 0),
+                        "last_position_at": t.last_position_at,
+                        "created_at": t.created_at,
+                    }
+                    for t in members
+                ],
+            }
+            for key, members in groups.items()
+            if len(members) > 1
+        ]
+
+
+@router.post("/merge-trackers")
+def merge_trackers(payload: MergeTrackersIn):
+    if payload.primary_tracker_id in payload.duplicate_tracker_ids:
+        raise HTTPException(status_code=400, detail="primary_in_duplicates")
+    if not payload.duplicate_tracker_ids:
+        raise HTTPException(status_code=400, detail="no_duplicates")
+
+    with get_session() as session:
+        primary = session.get(Tracker, payload.primary_tracker_id)
+        if not primary:
+            raise HTTPException(status_code=404, detail="primary_not_found")
+        duplicates = session.exec(
+            select(Tracker).where(Tracker.id.in_(payload.duplicate_tracker_ids))
+        ).all()
+        if len(duplicates) != len(payload.duplicate_tracker_ids):
+            raise HTTPException(status_code=404, detail="duplicate_not_found")
+
+        existing_caretakers = {
+            tc.user_id
+            for tc in session.exec(
+                select(TrackerCaretaker).where(TrackerCaretaker.tracker_id == primary.id)
+            ).all()
+        }
+        added_caretakers = 0
+        photo_paths: list[str] = []
+
+        for dup in duplicates:
+            # the duplicate's own owner, and anyone already added as a
+            # caretaker on it, both become caretakers on the surviving pet
+            candidate_ids = {dup.owner_id} | {
+                tc.user_id
+                for tc in session.exec(
+                    select(TrackerCaretaker).where(TrackerCaretaker.tracker_id == dup.id)
+                ).all()
+            }
+            for uid in candidate_ids:
+                if uid == primary.owner_id or uid in existing_caretakers:
+                    continue
+                session.add(TrackerCaretaker(tracker_id=primary.id, user_id=uid))
+                existing_caretakers.add(uid)
+                added_caretakers += 1
+
+            for row in session.exec(select(TrackerCaretaker).where(TrackerCaretaker.tracker_id == dup.id)).all():
+                session.delete(row)
+            for row in session.exec(select(Position).where(Position.tracker_id == dup.id)).all():
+                session.delete(row)
+            for row in session.exec(select(Telemetry).where(Telemetry.tracker_id == dup.id)).all():
+                session.delete(row)
+            for row in session.exec(select(Geofence).where(Geofence.tracker_id == dup.id)).all():
+                session.delete(row)
+            for photo in session.exec(select(PetPhoto).where(PetPhoto.tracker_id == dup.id)).all():
+                photo_paths.append(photo.path)
+                session.delete(photo)
+            for row in session.exec(select(Event).where(Event.tracker_id == dup.id)).all():
+                session.delete(row)
+            session.delete(dup)
+
+        session.commit()
+
+    for path in photo_paths:
+        delete_image(path)
+
+    return {"ok": True, "caretakers_added": added_caretakers, "merged": len(duplicates)}

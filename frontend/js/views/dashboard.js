@@ -90,13 +90,19 @@ export async function mountDashboard(container) {
   function popupHtml(tracker) {
     const batt = tracker.last_battery != null ? `${tracker.last_battery}%` : "–";
     const speed = tracker.last_speed != null ? `${(tracker.last_speed).toFixed(1)} m/s` : "–";
+    // Ring pushes a command to the pet's own radio node — a control action,
+    // so it's hidden for pets shared with this account as a caretaker
+    // (read-only access, see backend/app/services/access.py).
+    const ringBtn = tracker.is_owner !== false
+      ? `<button class="btn btn-sm btn-primary" data-ring="${tracker.id}">🔔 ${t("dashboard.ring")}</button>`
+      : "";
     return `
       <div>
         <b>${escapeHtml(tracker.name)}</b><br>
         🔋 ${batt} &nbsp; 🏃 ${speed}<br>
         <span class="muted">${t("dashboard.last_fix")}: ${timeAgo(tracker.last_position_at)}</span>
         <div class="popup-ring-btn">
-          <button class="btn btn-sm btn-primary" data-ring="${tracker.id}">🔔 ${t("dashboard.ring")}</button>
+          ${ringBtn}
           <button class="btn btn-sm" data-timeline="${tracker.id}">📈 ${t("dashboard.timeline")}</button>
         </div>
       </div>
@@ -174,7 +180,7 @@ export async function mountDashboard(container) {
           <div class="tracker-name">${escapeHtml(t.name)}</div>
           <div class="tracker-meta">${t.last_battery != null ? `🔋 ${t.last_battery}% · ` : ""}${timeAgo(t.last_position_at)}</div>
         </div>
-        <button class="btn btn-sm" data-ring-chip="${t.id}" title="${t.name}">🔔</button>
+        ${t.is_owner !== false ? `<button class="btn btn-sm" data-ring-chip="${t.id}" title="${t.name}">🔔</button>` : ""}
       </div>
     `).join("");
     panel.querySelectorAll("[data-fly]").forEach((row) => {

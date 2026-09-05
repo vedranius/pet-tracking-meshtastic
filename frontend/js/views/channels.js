@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { state, subscribe, refreshChannels } from "../state.js";
+import { state, subscribe, refreshChannels, ownedTrackers } from "../state.js";
 import { openModal, confirmDialog, el } from "../util.js";
 import { toast } from "../toast.js";
 import { t, onLocaleChange } from "../i18n.js";
@@ -105,7 +105,7 @@ export async function mountChannels(container) {
     const gwItems = state.gateways.map((g) =>
       `<label><input type="checkbox" name="target" value="gateway:${g.id}"> 📡 ${escapeHtml(g.name)} (${t("channels.gateway")})</label>`
     ).join("");
-    const trItems = state.trackers.filter((tr) => tr.node_id).map((tr) =>
+    const trItems = ownedTrackers().filter((tr) => tr.node_id).map((tr) =>
       `<label><input type="checkbox" name="target" value="${escapeHtml(tr.node_id)}"> 🐾 ${escapeHtml(tr.name)}</label>`
     ).join("");
 

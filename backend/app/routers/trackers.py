@@ -7,7 +7,7 @@ from sqlmodel import select
 
 from ..auth import require_login
 from ..db import get_session
-from ..models import Channel, Event, Gateway, PetPhoto, Position, Telemetry, Tracker, User
+from ..models import Channel, Event, Gateway, PetPhoto, Position, Telemetry, Tracker, TrackerCaretaker, User
 from ..schemas import BuzzerConfigIn, PositionConfigIn, PowerConfigIn, RingIn, TrackerIn
 from ..services import mesh_admin
 from ..services.mesh_manager import mesh_manager
@@ -24,8 +24,27 @@ def _user_gateway_ids(session, owner_id: int) -> list[int]:
 
 
 def _own_tracker(session, tracker_id: int, owner_id: int) -> Tracker:
+    """Strict owner check — used for control actions (edit/delete/ring/radio
+    config/photo upload): those change the pet or push to physical hardware,
+    so they stay owner (or admin, via the separate admin router) only."""
     t = session.get(Tracker, tracker_id)
     if not t or t.owner_id != owner_id:
+        raise HTTPException(status_code=404, detail="not_found")
+    return t
+
+
+def _readable_tracker(session, tracker_id: int, user_id: int) -> Tracker:
+    """Relaxed check for read-only endpoints (positions/telemetry) — allows
+    the owner or anyone added as a caretaker on this tracker."""
+    t = session.get(Tracker, tracker_id)
+    if not t:
+        raise HTTPException(status_code=404, detail="not_found")
+    if t.owner_id == user_id:
+        return t
+    is_caretaker = session.exec(
+        select(TrackerCaretaker).where(TrackerCaretaker.tracker_id == tracker_id, TrackerCaretaker.user_id == user_id)
+    ).first()
+    if not is_caretaker:
         raise HTTPException(status_code=404, detail="not_found")
     return t
 
@@ -33,7 +52,16 @@ def _own_tracker(session, tracker_id: int, owner_id: int) -> Tracker:
 @router.get("")
 def list_trackers(user: User = Depends(require_login)):
     with get_session() as session:
-        return session.exec(select(Tracker).where(Tracker.owner_id == user.id)).all()
+        owned = session.exec(select(Tracker).where(Tracker.owner_id == user.id)).all()
+        cared_ids = session.exec(
+            select(TrackerCaretaker.tracker_id).where(TrackerCaretaker.user_id == user.id)
+        ).all()
+        cared = session.exec(select(Tracker).where(Tracker.id.in_(cared_ids))).all() if cared_ids else []
+        return [
+            {**t.model_dump(), "is_owner": True} for t in owned
+        ] + [
+            {**t.model_dump(), "is_owner": False} for t in cared
+        ]
 
 
 @router.post("")
@@ -76,7 +104,7 @@ def tracker_positions(
 ):
     since, until = resolve_range(hours, date)
     with get_session() as session:
-        _own_tracker(session, tracker_id, user.id)
+        _readable_tracker(session, tracker_id, user.id)
         stmt = select(Position).where(Position.tracker_id == tracker_id, Position.ts >= since)
         if until:
             stmt = stmt.where(Position.ts < until)
@@ -87,7 +115,7 @@ def tracker_positions(
 def tracker_telemetry(tracker_id: int, hours: int = Query(default=24, le=24 * 30), user: User = Depends(require_login)):
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
     with get_session() as session:
-        _own_tracker(session, tracker_id, user.id)
+        _readable_tracker(session, tracker_id, user.id)
         rows = session.exec(
             select(Telemetry)
             .where(Telemetry.tracker_id == tracker_id, Telemetry.ts >= since)

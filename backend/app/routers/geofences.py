@@ -7,6 +7,7 @@ from ..auth import require_login
 from ..db import get_session
 from ..models import Geofence, Tracker, User
 from ..schemas import GeofenceIn
+from ..services.access import accessible_tracker_ids
 
 router = APIRouter(prefix="/api/geofences", tags=["geofences"])
 
@@ -14,7 +15,11 @@ router = APIRouter(prefix="/api/geofences", tags=["geofences"])
 @router.get("")
 def list_geofences(tracker_id: int | None = Query(default=None), user: User = Depends(require_login)):
     with get_session() as session:
-        stmt = select(Geofence).where(Geofence.owner_id == user.id)
+        # Includes fences on trackers the user only has caretaker (read)
+        # access to, not just ones they own — creating/editing/deleting a
+        # fence stays owner-only below, this is just the viewing side.
+        ids = accessible_tracker_ids(session, user.id)
+        stmt = select(Geofence).where(Geofence.tracker_id.in_(ids))
         if tracker_id is not None:
             stmt = stmt.where(Geofence.tracker_id == tracker_id)
         return session.exec(stmt).all()

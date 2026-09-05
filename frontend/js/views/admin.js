@@ -30,6 +30,7 @@ export async function mountAdmin(container) {
       <div class="page-header">
         <h2>🛡️ ${t("admin.title")}</h2>
         <div class="card-row">
+          <button class="btn btn-sm" id="merge-duplicates">🔗 ${t("admin.merge_duplicates")}</button>
           <button class="btn btn-sm" id="copy-settings">📋 ${t("admin.copy_settings")}</button>
           <button class="btn btn-primary btn-sm" id="add-user">+ ${t("admin.add_user")}</button>
         </div>
@@ -42,6 +43,7 @@ export async function mountAdmin(container) {
 
   container.querySelector("#add-user").addEventListener("click", () => openAddUserModal());
   container.querySelector("#copy-settings").addEventListener("click", () => openCopySettingsModal());
+  container.querySelector("#merge-duplicates").addEventListener("click", () => openMergeDuplicatesModal());
 
   const map = L.map("admin-map").setView(DEFAULT_CENTER, 7);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -137,6 +139,20 @@ export async function mountAdmin(container) {
                     ${tr.geofences.map((g) => `<span class="badge ${g.enabled ? "badge-ok" : "badge-mut"}" title="${g.shape}">📐 ${escapeHtml(g.name)}</span>`).join("")}
                   </div>
                 ` : ""}
+                <div class="admin-geofence-chips">
+                  <span class="muted" style="font-size:12px">👪 ${t("admin.caretakers")}:</span>
+                  ${tr.caretakers.map((c) => `
+                    <span class="chip chip-removable">🤝 ${escapeHtml(c.username)}
+                      <button type="button" data-remove-caretaker="${tr.id}:${c.id}" title="${t("admin.remove_caretaker")}">✕</button>
+                    </span>
+                  `).join("") || `<span class="muted" style="font-size:12px">${t("admin.no_caretakers")}</span>`}
+                  <select class="admin-caretaker-select" data-add-caretaker="${tr.id}" style="width:auto;font-size:12px;padding:2px 6px">
+                    <option value="">+ ${t("admin.add_caretaker")}</option>
+                    ${overview.users
+                      .filter((u) => u.user.id !== row.user.id && !tr.caretakers.some((c) => c.id === u.user.id))
+                      .map((u) => `<option value="${u.user.id}">${escapeHtml(u.user.username)}</option>`).join("")}
+                  </select>
+                </div>
               </div>
             `).join("")}
           </div>
@@ -193,6 +209,32 @@ export async function mountAdmin(container) {
           toast(input.checked ? t("admin.location_sharing_on") : t("admin.location_sharing_off"), "success");
         } catch (err) {
           input.checked = !input.checked;
+          toast(err.message, "error");
+        }
+      });
+    });
+
+    el.querySelectorAll("[data-add-caretaker]").forEach((select) => {
+      select.addEventListener("change", async () => {
+        if (!select.value) return;
+        try {
+          await api.post(`/api/admin/trackers/${select.dataset.addCaretaker}/caretakers`, { user_id: Number(select.value) });
+          toast(t("admin.caretaker_added"), "success");
+          await load();
+        } catch (err) {
+          toast(err.message, "error");
+        }
+      });
+    });
+
+    el.querySelectorAll("[data-remove-caretaker]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const [trackerId, userId] = btn.dataset.removeCaretaker.split(":");
+        try {
+          await api.del(`/api/admin/trackers/${trackerId}/caretakers/${userId}`);
+          toast(t("admin.caretaker_removed"), "success");
+          await load();
+        } catch (err) {
           toast(err.message, "error");
         }
       });
@@ -294,6 +336,80 @@ export async function mountAdmin(container) {
         });
         const c = res.copied;
         toast(t("admin.copy_done", { gateways: c.gateways, channels: c.channels, pets: c.pets, geofences: c.geofences, cameras: c.cameras }), "success");
+        await load();
+      },
+    });
+  }
+
+  async function openMergeDuplicatesModal() {
+    let groups = [];
+    try {
+      groups = await api.get("/api/admin/duplicate-pets");
+    } catch (err) {
+      toast(err.message, "error");
+      return;
+    }
+    if (!groups.length) {
+      toast(t("admin.no_duplicates"), "success");
+      return;
+    }
+
+    const groupOptions = groups.map((g, i) =>
+      `<option value="${i}">${escapeHtml(g.trackers[0].name)} (${g.trackers.length}×)</option>`
+    ).join("");
+
+    openModal({
+      title: t("admin.merge_duplicates"),
+      submitLabel: t("admin.merge"),
+      bodyHtml: `
+        <p class="muted" style="font-size:13px;margin-top:-6px">${t("admin.merge_hint")}</p>
+        <label>${t("admin.merge_group")} <select name="group_index">${groupOptions}</select></label>
+        <div id="merge-group-body"></div>
+      `,
+      onMount: (form) => {
+        const groupSelect = form.querySelector('[name="group_index"]');
+        const body = form.querySelector("#merge-group-body");
+
+        function renderGroup() {
+          const g = groups[Number(groupSelect.value)];
+          body.innerHTML = `
+            <label>${t("admin.merge_primary")}
+              <select name="primary_tracker_id">
+                ${g.trackers.map((tr) =>
+                  `<option value="${tr.id}">${escapeHtml(tr.name)} — ${escapeHtml(tr.owner_username)}${tr.photo_count ? ` (📷${tr.photo_count})` : ""}</option>`
+                ).join("")}
+              </select>
+            </label>
+            <div id="merge-dup-list"></div>
+          `;
+          const primarySelect = body.querySelector('[name="primary_tracker_id"]');
+          const dupList = body.querySelector("#merge-dup-list");
+          function renderDupList() {
+            const primaryId = Number(primarySelect.value);
+            dupList.innerHTML = `
+              <p class="muted" style="font-size:12px">${t("admin.merge_fold_hint")}</p>
+              <div class="checklist">
+                ${g.trackers.filter((tr) => tr.id !== primaryId).map((tr) =>
+                  `<label><input type="checkbox" name="dup" value="${tr.id}" checked> ${escapeHtml(tr.name)} — ${escapeHtml(tr.owner_username)}</label>`
+                ).join("")}
+              </div>
+            `;
+          }
+          primarySelect.addEventListener("change", renderDupList);
+          renderDupList();
+        }
+        groupSelect.addEventListener("change", renderGroup);
+        renderGroup();
+      },
+      onSubmit: async (fd) => {
+        const primaryId = Number(fd.get("primary_tracker_id"));
+        const dupIds = fd.getAll("dup").map(Number).filter((id) => id !== primaryId);
+        if (!dupIds.length) { toast(t("admin.merge_need_duplicate"), "error"); return false; }
+        const res = await api.post("/api/admin/merge-trackers", {
+          primary_tracker_id: primaryId,
+          duplicate_tracker_ids: dupIds,
+        });
+        toast(t("admin.merge_done", { merged: res.merged, caretakers: res.caretakers_added }), "success");
         await load();
       },
     });

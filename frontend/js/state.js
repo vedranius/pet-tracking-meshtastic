@@ -70,6 +70,15 @@ export function trackerById(id) {
   return state.trackers.find((t) => t.id === id);
 }
 
+// Trackers this account owns outright — excludes pets shared with them as a
+// caretaker, since those only grant read access (see backend/app/services/
+// access.py): editing, deleting, radio config, and geofence management all
+// stay owner-only, so pages offering those actions should use this instead
+// of the full state.trackers list.
+export function ownedTrackers() {
+  return state.trackers.filter((t) => t.is_owner !== false);
+}
+
 export function channelById(id) {
   return state.channels.find((c) => c.id === id);
 }

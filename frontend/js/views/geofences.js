@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { state, subscribe, trackerById } from "../state.js";
+import { state, subscribe, trackerById, ownedTrackers } from "../state.js";
 import { openModal, confirmDialog, el } from "../util.js";
 import { toast } from "../toast.js";
 import { t, onLocaleChange } from "../i18n.js";
@@ -20,7 +20,8 @@ export async function mountGeofences(container) {
   `;
 
   const trackerSelect = document.getElementById("tracker-select");
-  trackerSelect.innerHTML = state.trackers.map((tr) => `<option value="${tr.id}">${escapeHtml(tr.name)}</option>`).join("")
+  const myTrackers = ownedTrackers();
+  trackerSelect.innerHTML = myTrackers.map((tr) => `<option value="${tr.id}">${escapeHtml(tr.name)}</option>`).join("")
     || `<option value="">${t("geofences.no_pets")}</option>`;
 
   const map = L.map("geo-map").setView(DEFAULT_CENTER, 13);
@@ -40,7 +41,7 @@ export async function mountGeofences(container) {
   });
   map.addControl(drawControl);
 
-  let currentTrackerId = state.trackers[0]?.id ?? null;
+  let currentTrackerId = myTrackers[0]?.id ?? null;
 
   function centerOnTracker() {
     const tr = trackerById(currentTrackerId);

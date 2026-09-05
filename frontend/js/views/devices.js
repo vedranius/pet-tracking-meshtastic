@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { state, subscribe, refreshGateways, refreshTrackers, channelById } from "../state.js";
+import { state, subscribe, refreshGateways, refreshTrackers, channelById, ownedTrackers } from "../state.js";
 import { openModal, confirmDialog, timeAgo, el } from "../util.js";
 import { toast } from "../toast.js";
 import { goToView } from "../app.js";
@@ -80,12 +80,13 @@ export async function mountDevices(container) {
   function renderTrackers() {
     const listEl = document.getElementById("tracker-list");
     if (!listEl) return;
-    if (!state.trackers.length) {
+    const trackers = ownedTrackers();
+    if (!trackers.length) {
       listEl.innerHTML = `<div class="list-empty">${t("devices.no_pets")}</div>`;
       return;
     }
     listEl.innerHTML = "";
-    for (const tr of state.trackers) {
+    for (const tr of trackers) {
       const ch = tr.channel_id ? channelById(tr.channel_id) : null;
       const card = el(`
         <div class="card">
