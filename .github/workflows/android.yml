@@ -17,6 +17,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      HAS_KEYSTORE: ${{ secrets.PAWTRACK_KEYSTORE_B64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,7 +39,7 @@ jobs:
       # enough to verify the app compiles on every push, even before the
       # first real release is cut.
       - name: Decode release keystore
-        if: ${{ secrets.PAWTRACK_KEYSTORE_B64 != '' }}
+        if: env.HAS_KEYSTORE == 'true'
         env:
           PAWTRACK_KEYSTORE_B64: ${{ secrets.PAWTRACK_KEYSTORE_B64 }}
         run: echo "$PAWTRACK_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
@@ -45,7 +47,7 @@ jobs:
       - name: Build release APK
         working-directory: android
         env:
-          PAWTRACK_KEYSTORE_PATH: ${{ secrets.PAWTRACK_KEYSTORE_B64 != '' && format('{0}/release.keystore', runner.temp) || '' }}
+          PAWTRACK_KEYSTORE_PATH: ${{ env.HAS_KEYSTORE == 'true' && format('{0}/release.keystore', runner.temp) || '' }}
           PAWTRACK_KEYSTORE_PASSWORD: ${{ secrets.PAWTRACK_KEYSTORE_PASSWORD }}
           PAWTRACK_KEY_ALIAS: ${{ secrets.PAWTRACK_KEY_ALIAS }}
           PAWTRACK_KEY_PASSWORD: ${{ secrets.PAWTRACK_KEY_PASSWORD }}
