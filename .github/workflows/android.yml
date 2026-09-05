@@ -1,0 +1,69 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+    tags:
+      - "android-v*.*.*"
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      # A release keystore is only present as a repo secret once one has
+      # been generated (see android/RELEASING.md). Without it, this step is
+      # skipped and the build below falls back to debug signing — good
+      # enough to verify the app compiles on every push, even before the
+      # first real release is cut.
+      - name: Decode release keystore
+        if: ${{ secrets.PAWTRACK_KEYSTORE_B64 != '' }}
+        env:
+          PAWTRACK_KEYSTORE_B64: ${{ secrets.PAWTRACK_KEYSTORE_B64 }}
+        run: echo "$PAWTRACK_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          PAWTRACK_KEYSTORE_PATH: ${{ secrets.PAWTRACK_KEYSTORE_B64 != '' && format('{0}/release.keystore', runner.temp) || '' }}
+          PAWTRACK_KEYSTORE_PASSWORD: ${{ secrets.PAWTRACK_KEYSTORE_PASSWORD }}
+          PAWTRACK_KEY_ALIAS: ${{ secrets.PAWTRACK_KEY_ALIAS }}
+          PAWTRACK_KEY_PASSWORD: ${{ secrets.PAWTRACK_KEY_PASSWORD }}
+        run: gradle assembleRelease --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pawtrack-release-apk
+          path: android/app/build/outputs/apk/release/*.apk
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/android-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/release/*.apk
+          name: PawTrack Android ${{ github.ref_name }}
+          body: |
+            PawTrack Android companion app — self-signed APK for sideloading (no Play Store account needed).
+
+            Install: download the APK below, allow "install from unknown sources" for your browser/file manager, then install it. On first launch, enter your PawTrack server's address.

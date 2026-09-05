@@ -4,3 +4,11 @@ __pycache__/
 data/
 .env
 node_modules/
+
+# Android
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+*.keystore
+*.jks

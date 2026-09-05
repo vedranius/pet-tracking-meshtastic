@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/permissions_title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary_dark" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/permissions_intro"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Location -->
+        <LinearLayout style="@style/PermissionRow">
+            <TextView style="@style/PermissionTitle" android:text="@string/permissions_location_title" />
+            <TextView style="@style/PermissionDesc" android:text="@string/permissions_location_desc" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLocation"
+                style="@style/PermissionButton"
+                android:text="@string/permissions_grant" />
+        </LinearLayout>
+
+        <!-- Background location -->
+        <LinearLayout style="@style/PermissionRow">
+            <TextView style="@style/PermissionTitle" android:text="@string/permissions_background_location_title" />
+            <TextView style="@style/PermissionDesc" android:text="@string/permissions_background_location_desc" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBackgroundLocation"
+                style="@style/PermissionButton"
+                android:text="@string/permissions_grant" />
+        </LinearLayout>
+
+        <!-- Notifications -->
+        <LinearLayout style="@style/PermissionRow">
+            <TextView style="@style/PermissionTitle" android:text="@string/permissions_notifications_title" />
+            <TextView style="@style/PermissionDesc" android:text="@string/permissions_notifications_desc" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNotifications"
+                style="@style/PermissionButton"
+                android:text="@string/permissions_grant" />
+        </LinearLayout>
+
+        <!-- Battery optimization -->
+        <LinearLayout style="@style/PermissionRow">
+            <TextView style="@style/PermissionTitle" android:text="@string/permissions_battery_title" />
+            <TextView style="@style/PermissionDesc" android:text="@string/permissions_battery_desc" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBattery"
+                style="@style/PermissionButton"
+                android:text="@string/permissions_grant" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/continueButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/permissions_continue" />
+    </LinearLayout>
+</ScrollView>

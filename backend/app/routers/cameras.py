@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -20,7 +21,9 @@ router = APIRouter(prefix="/api/cameras", tags=["cameras"], dependencies=[Depend
 # feed on demand, remuxing it to HLS. We proxy its HTTP output through this
 # authenticated route rather than exposing mediamtx's HLS port directly, so
 # camera access goes through the same login session as the rest of the app.
-MEDIAMTX_HLS_BASE = "http://127.0.0.1:8888"
+# Overridable so multiple PawTrack instances (or PawTrack alongside another
+# app using mediamtx) can share one host without port clashes.
+MEDIAMTX_HLS_BASE = os.environ.get("PAWTRACK_MEDIAMTX_HLS_BASE", "http://127.0.0.1:8888")
 
 # Idle-return timing is in-memory (per-process — fine, there's one app
 # process); the idle timeout and default preset themselves are persisted in

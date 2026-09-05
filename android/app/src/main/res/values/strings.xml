@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PawTrack</string>
+
+    <string name="setup_title">PawTrack</string>
+    <string name="setup_subtitle">Enter the address of your PawTrack server</string>
+    <string name="setup_url_label">Server URL</string>
+    <string name="setup_url_hint">https://pawtrack.example.com</string>
+    <string name="setup_url_error">Enter a full address starting with http:// or https://</string>
+    <string name="setup_continue">Continue</string>
+
+    <string name="permissions_title">Almost there</string>
+    <string name="permissions_intro">PawTrack shares your location in the background so an admin can see how far your pet is from you, and shows notifications for alerts even when the app is closed. It needs a few permissions to do that reliably.</string>
+    <string name="permissions_location_title">Location</string>
+    <string name="permissions_location_desc">Needed to share your position.</string>
+    <string name="permissions_background_location_title">Background location</string>
+    <string name="permissions_background_location_desc">Needed so sharing keeps working while the app isn\'t open. Choose \"Allow all the time\" on the next screen.</string>
+    <string name="permissions_notifications_title">Notifications</string>
+    <string name="permissions_notifications_desc">Needed to alert you about geofence and battery events.</string>
+    <string name="permissions_battery_title">Unrestricted battery usage</string>
+    <string name="permissions_battery_desc">Prevents Android from stopping location sharing to save battery.</string>
+    <string name="permissions_grant">Grant</string>
+    <string name="permissions_granted">Granted</string>
+    <string name="permissions_continue">Continue to PawTrack</string>
+
+    <string name="notification_channel_sharing_name">Location sharing</string>
+    <string name="notification_channel_sharing_desc">Shows while PawTrack is sharing your location in the background</string>
+    <string name="notification_channel_alerts_name">PawTrack alerts</string>
+    <string name="notification_channel_alerts_desc">Geofence, battery, and offline alerts from your PawTrack server</string>
+    <string name="notification_sharing_title">Sharing your location</string>
+    <string name="notification_sharing_text">PawTrack is running in the background</string>
+    <string name="notification_action_stop">Stop sharing</string>
+
+    <string name="menu_change_server">Change server</string>
+    <string name="menu_start_sharing">Start location sharing</string>
+    <string name="menu_stop_sharing">Stop location sharing</string>
+
+    <string name="webview_load_error">Couldn\'t reach %1$s. Check the address and your connection.</string>
+    <string name="retry">Retry</string>
+    <string name="toast_sharing_started">Location sharing started</string>
+    <string name="toast_sharing_stopped">Location sharing stopped</string>
+
+    <string name="change_server_confirm">Change the server address? You\'ll need to sign in again.</string>
+
+    <!-- Event notification text — mirrors backend/app/services/mesh_manager.py
+         and frontend/js/eventText.js. Keep all three in sync. -->
+    <string name="event_low_battery">%1$s battery: %2$s%%</string>
+    <string name="event_geofence_enter">%1$s is back inside “%2$s”</string>
+    <string name="event_geofence_exit">%1$s left “%2$s”!</string>
+    <string name="event_geofence_exit_update">%1$s is still outside “%2$s”</string>
+    <string name="event_offline">%1$s hasn\'t reported in for %2$s min</string>
+    <string name="event_ring_sent">Ring command sent (%1$s)</string>
+</resources>

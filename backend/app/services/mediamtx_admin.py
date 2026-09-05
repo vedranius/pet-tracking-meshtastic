@@ -8,12 +8,15 @@ fails, we log and continue — camera CRUD in our own DB still succeeds, the
 stream just won't come up until mediamtx is reachable again.
 """
 import logging
+import os
 
 import httpx
 
 log = logging.getLogger("pawtrack.mediamtx")
 
-MEDIAMTX_API_BASE = "http://127.0.0.1:9997"
+# Overridable so multiple PawTrack instances (or PawTrack alongside another
+# app using mediamtx) can share one host without port clashes.
+MEDIAMTX_API_BASE = os.environ.get("PAWTRACK_MEDIAMTX_API_BASE", "http://127.0.0.1:9997")
 
 
 def _path_name(camera_id: int) -> str:

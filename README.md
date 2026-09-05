@@ -83,6 +83,10 @@ Re-running `sudo ./install.sh` on an existing install pulls in code changes and 
 
 If you skip the nginx step (e.g. you're using Cloudflare Tunnel with Zero Trust / Access for authentication in front of this), see `deploy/nginx-pawtrack.conf` for the two things any proxy in front of PawTrack needs: forwarding `/ws` with WebSocket upgrade headers, and (if you're behind a caching CDN) disabling caching so frontend updates aren't served stale.
 
+### Running more than one instance on the same host
+
+Each instance needs its own `uvicorn` port and, if cameras are enabled, its own mediamtx ports. Set `PAWTRACK_MEDIAMTX_HLS_BASE` and `PAWTRACK_MEDIAMTX_API_BASE` (e.g. `http://127.0.0.1:8889` / `http://127.0.0.1:9998`) in the second instance's `.env` to match the ports in its own `mediamtx.yml`, so the two mediamtx processes don't collide on the defaults (8888/9997).
+
 ## Versions
 
 | Component | Version |

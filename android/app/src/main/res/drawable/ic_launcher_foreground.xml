@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- paw pad -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,58 C64,58 72,66 72,76 C72,86 64,92 54,92 C44,92 36,86 36,76 C36,66 44,58 54,58 Z" />
+    <!-- toes -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,34 C39,34 43,39 43,45 C43,51 39,56 34,56 C29,56 25,51 25,45 C25,39 29,34 34,34 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M74,34 C79,34 83,39 83,45 C83,51 79,56 74,56 C69,56 65,51 65,45 C65,39 69,34 74,34 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,22 C53,22 57,27 57,33 C57,39 53,44 48,44 C43,44 39,39 39,33 C39,27 43,22 48,22 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M62,22 C67,22 71,27 71,33 C71,39 67,44 62,44 C57,44 53,39 53,33 C53,27 57,22 62,22 Z" />
+</vector>

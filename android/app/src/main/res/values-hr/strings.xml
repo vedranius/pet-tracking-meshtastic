@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PawTrack</string>
+
+    <string name="setup_title">PawTrack</string>
+    <string name="setup_subtitle">Unesi adresu svog PawTrack servera</string>
+    <string name="setup_url_label">URL servera</string>
+    <string name="setup_url_hint">https://pawtrack.example.com</string>
+    <string name="setup_url_error">Unesi punu adresu koja počinje s http:// ili https://</string>
+    <string name="setup_continue">Nastavi</string>
+
+    <string name="permissions_title">Još malo</string>
+    <string name="permissions_intro">PawTrack dijeli tvoju lokaciju u pozadini kako bi admin mogao vidjeti koliko je tvoj ljubimac udaljen od tebe, te prikazuje obavijesti za alerte čak i kad app nije otvoren. Za to treba nekoliko dozvola.</string>
+    <string name="permissions_location_title">Lokacija</string>
+    <string name="permissions_location_desc">Potrebno za dijeljenje tvoje pozicije.</string>
+    <string name="permissions_background_location_title">Lokacija u pozadini</string>
+    <string name="permissions_background_location_desc">Potrebno kako bi dijeljenje radilo i kad app nije otvoren. Na sljedećem zaslonu odaberi \"Dozvoli cijelo vrijeme\".</string>
+    <string name="permissions_notifications_title">Obavijesti</string>
+    <string name="permissions_notifications_desc">Potrebno za upozorenja o geofenceu i bateriji.</string>
+    <string name="permissions_battery_title">Neograničena potrošnja baterije</string>
+    <string name="permissions_battery_desc">Sprječava Android da zaustavi dijeljenje lokacije radi štednje baterije.</string>
+    <string name="permissions_grant">Dozvoli</string>
+    <string name="permissions_granted">Dozvoljeno</string>
+    <string name="permissions_continue">Nastavi na PawTrack</string>
+
+    <string name="notification_channel_sharing_name">Dijeljenje lokacije</string>
+    <string name="notification_channel_sharing_desc">Prikazuje se dok PawTrack dijeli tvoju lokaciju u pozadini</string>
+    <string name="notification_channel_alerts_name">PawTrack obavijesti</string>
+    <string name="notification_channel_alerts_desc">Obavijesti o geofenceu, bateriji i statusu s tvog PawTrack servera</string>
+    <string name="notification_sharing_title">Dijeljenje lokacije</string>
+    <string name="notification_sharing_text">PawTrack radi u pozadini</string>
+    <string name="notification_action_stop">Zaustavi dijeljenje</string>
+
+    <string name="menu_change_server">Promijeni server</string>
+    <string name="menu_start_sharing">Pokreni dijeljenje lokacije</string>
+    <string name="menu_stop_sharing">Zaustavi dijeljenje lokacije</string>
+
+    <string name="webview_load_error">Nije moguće spojiti se na %1$s. Provjeri adresu i internetsku vezu.</string>
+    <string name="retry">Pokušaj ponovno</string>
+    <string name="toast_sharing_started">Dijeljenje lokacije pokrenuto</string>
+    <string name="toast_sharing_stopped">Dijeljenje lokacije zaustavljeno</string>
+
+    <string name="change_server_confirm">Promijeniti adresu servera? Morat ćeš se ponovno prijaviti.</string>
+
+    <!-- Event notification text — mirrors backend/app/services/mesh_manager.py
+         and frontend/js/eventText.js. Keep all three in sync. -->
+    <string name="event_low_battery">%1$s baterija: %2$s%%</string>
+    <string name="event_geofence_enter">%1$s se vratila u područje “%2$s”</string>
+    <string name="event_geofence_exit">%1$s je izašla iz područja “%2$s”!</string>
+    <string name="event_geofence_exit_update">%1$s je i dalje izvan područja “%2$s”</string>
+    <string name="event_offline">%1$s se ne javlja preko %2$s min</string>
+    <string name="event_ring_sent">Poruka za zvonjavu poslana (%1$s)</string>
+</resources>
