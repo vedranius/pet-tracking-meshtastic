@@ -98,7 +98,7 @@ Each instance needs its own `uvicorn` port and, if cameras are enabled, its own 
 
 | Component | Version |
 |---|---|
-| PawTrack web app | `0.5.0` (pre-release) — shown in the app's own topbar and login screen |
+| PawTrack web app | `0.5.1` (pre-release) — shown in the app's own topbar and login screen |
 | PawTrack Android app | `0.2.0` (pre-release) — shown in the app's toolbar |
 
 Releases are published under [Releases](../../releases) once tagged.

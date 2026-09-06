@@ -22,9 +22,11 @@ The debug APK lands in `app/build/outputs/apk/debug/`. It's signed with the Andr
 
 ## Releasing
 
-CI (`.github/workflows/android.yml`) builds a signed release APK automatically on every push to `android/` and publishes it under [Releases](../../releases) when a tag like `android-v0.1.0` is pushed. It signs with a keystore stored as repo secrets (`PAWTRACK_KEYSTORE_B64`, `PAWTRACK_KEYSTORE_PASSWORD`, `PAWTRACK_KEY_ALIAS`, `PAWTRACK_KEY_PASSWORD`) so every release shares the same signing identity and installs as an upgrade over the last one. Without those secrets set, it falls back to debug signing (still builds, just not installable as an update path).
+CI (`.github/workflows/android.yml`) builds a signed release APK automatically on every push to `android/`, and attaches it as a downloadable asset under [Releases](../../releases) whenever *any* version tag is pushed — both an Android-only tag (`android-v0.1.0`) and a main web app tag (`v0.5.0`). It signs with a keystore stored as repo secrets (`PAWTRACK_KEYSTORE_B64`, `PAWTRACK_KEYSTORE_PASSWORD`, `PAWTRACK_KEY_ALIAS`, `PAWTRACK_KEY_PASSWORD`) so every release shares the same signing identity and installs as an upgrade over the last one. Without those secrets set, it falls back to debug signing (still builds, just not installable as an update path).
 
-To cut a release:
+Attaching the APK never overwrites a release's title or notes — it only adds the file, via `gh release upload`. So a web app release cut with its own hand-written notes (see the main [README](../README.md)) still gets the current APK attached automatically, without CI clobbering that text.
+
+To cut an Android-only release (bump the app's own version without a web app change):
 
 ```bash
 git tag android-v0.1.0

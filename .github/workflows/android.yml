@@ -8,6 +8,7 @@ on:
       - ".github/workflows/android.yml"
     tags:
       - "android-v*.*.*"
+      - "v*.*.*"
   pull_request:
     paths:
       - "android/**"
@@ -62,13 +63,30 @@ jobs:
           name: pawtrack-release-apk
           path: android/app/build/outputs/apk/release/*.apk
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/android-v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: android/app/build/outputs/apk/release/*.apk
-          name: PawTrack Android ${{ github.ref_name }}
-          body: |
-            PawTrack Android companion app — self-signed APK for sideloading (no Play Store account needed).
+      # Every tagged release — whether it's an Android-only tag (android-v*)
+      # or a main web app tag (v*) — should end up with the current APK
+      # attached, so "Releases" always has something installable. Uses the
+      # gh CLI directly (not softprops/action-gh-release) specifically so it
+      # never touches an existing release's title/notes: `gh release upload`
+      # only adds/replaces the asset file, leaving everything else alone —
+      # important since web releases already get hand-written notes from a
+      # separate `gh release create` step in the normal release process.
+      - name: Attach APK to this tag's release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_name }}"
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            if [[ "$TAG" == android-v* ]]; then
+              gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+                --title "PawTrack Android $TAG" \
+                --notes "PawTrack Android companion app — self-signed APK for sideloading (no Play Store account needed).
 
-            Install: download the APK below, allow "install from unknown sources" for your browser/file manager, then install it. On first launch, enter your PawTrack server's address.
+          Install: download the APK below, allow \"install from unknown sources\" for your browser/file manager, then install it. On first launch, enter your PawTrack server's address."
+            else
+              gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes
+            fi
+          fi
+          gh release upload "$TAG" android/app/build/outputs/apk/release/*.apk --repo "$GITHUB_REPOSITORY" --clobber
